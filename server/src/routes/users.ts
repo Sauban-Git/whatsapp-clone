@@ -1,8 +1,7 @@
 import { Router, type Request, type Response } from "express";
-import { PrismaClient } from "../generated/prisma/index.js";
+import { prisma } from "../db/db.js";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 router.get("/:userId", async (req: Request, res: Response) => {
   const userId = req.params.userId;
@@ -26,6 +25,7 @@ router.get("/:userId", async (req: Request, res: Response) => {
     });
   }
 });
+
 router.post("/", async (req: Request, res: Response) => {
   const { phoneNumber, name } = req.body;
   if (!phoneNumber || !name)
@@ -35,7 +35,7 @@ router.post("/", async (req: Request, res: Response) => {
   try {
     const user = await prisma.user.create({
       data: {
-        phoneNumber,
+        phoneNumber: Number(phoneNumber),
         name,
       },
     });
@@ -49,6 +49,7 @@ router.post("/", async (req: Request, res: Response) => {
     });
   }
 });
+
 router.put("/:userId", async (req: Request, res: Response) => {
   const userId = req.params.userId;
   const { name } = req.body;
@@ -75,3 +76,5 @@ router.put("/:userId", async (req: Request, res: Response) => {
     });
   }
 });
+
+export { router as userRouter };

@@ -4,6 +4,7 @@ import cors from "cors"
 import { conversationRouter } from "./routes/conversations.js";
 import { messagesRouter } from "./routes/messages.js";
 import { webhookRouter } from "./routes/webHook.js";
+import { userRouter } from "./routes/users.js";
 
 dotenv.config();
 
@@ -18,7 +19,8 @@ app.use(cors({
 
 app.use("/conversations", conversationRouter);
 app.use("/messages", messagesRouter);
-app.use("/webhook", webhookRouter)
+app.use("/webhook", webhookRouter);
+app.use("/user", userRouter)
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server started at port: ${port}`);

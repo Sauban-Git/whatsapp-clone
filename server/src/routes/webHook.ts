@@ -1,7 +1,6 @@
 import { Router, type Request, type Response } from "express";
-import { PrismaClient } from "../generated/prisma/index.js";
+import { prisma } from "../db/db.js";
 
-const prisma = new PrismaClient();
 const router = Router();
 
 router.post("/webhook", async (req: Request, res: Response) => {

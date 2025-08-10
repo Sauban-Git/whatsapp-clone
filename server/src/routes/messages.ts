@@ -1,8 +1,7 @@
 import { Router, type Request, type Response } from "express";
-import { PrismaClient } from "../generated/prisma/index.js";
+import { prisma } from "../db/db.js";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 router.get(
   "/conversation/:conversationId",
