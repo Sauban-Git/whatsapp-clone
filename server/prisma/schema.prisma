@@ -13,3 +13,81 @@ datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
+
+enum DeliveryStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  FILE
+  STICKER
+}
+
+model User {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  phoneNumber   Int             @unique
+  name          String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  participant   Participant[]
+  Message       Message[]
+  MessageStatus MessageStatus[]
+}
+
+model Conversation {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  name         String?
+  isGroup      Boolean
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime @updatedAt
+  participants Participant[]
+  Message      Message[]
+}
+
+model Participant {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @db.ObjectId
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversationId String       @db.ObjectId
+
+  joinedAt DateTime @default(now())
+  isAdmin  Boolean  @default(false)
+}
+
+model Message {
+  id      String      @id @default(auto()) @map("_id") @db.ObjectId
+  content String?
+  type    MessageType @default(TEXT)
+
+  sender   User   @relation(fields: [senderId], references: [id])
+  senderId String @db.ObjectId
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversationId String       @db.ObjectId
+
+  statuses MessageStatus[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MessageStatus {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  message   Message @relation(fields: [messageId], references: [id])
+  messageId String  @db.ObjectId
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @db.ObjectId
+
+  status    DeliveryStatus @default(SENT)
+  updatedAt DateTime       @default(now())
+}
