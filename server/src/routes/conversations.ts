@@ -26,10 +26,10 @@ router.get("/", async (req: Request, res: Response) => {
           },
           take: 1,
           select: {
-            content: true, 
-            createdAt: true, 
-            senderId: true, 
-            type: true, 
+            content: true,
+            createdAt: true,
+            senderId: true,
+            type: true,
           },
         },
       },
@@ -47,15 +47,55 @@ router.get("/", async (req: Request, res: Response) => {
 });
 
 router.post("/", async (req: Request, res: Response) => {
-  // Create a conversation
+  const body = req.body;
+  try {
+    const conversation = prisma.conversation.create({
+      data: {
+        isGroup: false,
+        participants: {
+          create: [{ userId: body.to }, { userId: body.from }],
+        },
+      },
+      include: {
+        participants: true,
+      },
+    });
+    return res.status(200).json({
+      msg: "Initiated conversation",
+    });
+  } catch (error) {
+    console.error("Error creating conversation: ", error);
+    return res.status(500).json({
+      error: "Unable to initiate conversation now.",
+    });
+  }
 });
 
 router.put("/:id", async (req: Request, res: Response) => {
-  // Update a conversation
+  // Update conversation name
 });
 
 router.delete("/:id", async (req: Request, res: Response) => {
-  // Delete a conversation
+  const conversationId = req.params.id;
+  if (!conversationId)
+    return res
+      .status(500)
+      .json({ error: "Specified conversation doesn't exist!" });
+  try {
+    const result = await prisma.conversation.delete({
+      where: {
+        id: conversationId,
+      },
+    });
+    return res.status(200).json({
+      msg: "Deleted conversation",
+    });
+  } catch (error) {
+    console.error("Error deleting conversation: ", error);
+    return res.status(500).json({
+      error: "Error deleting conversation",
+    });
+  }
 });
 
 export { router as conversationRouter };
