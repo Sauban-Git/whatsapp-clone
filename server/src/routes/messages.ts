@@ -75,6 +75,9 @@ router.delete("/:messageId", async (req: Request, res: Response) => {
         id: messageId,
       },
     });
+    return res.status(200).json({
+      message: "Done deleting message"
+    })
   } catch (error) {
     console.error("Error deleting message: ", error);
     return res.status(500).json({
