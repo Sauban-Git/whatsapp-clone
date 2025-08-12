@@ -65,7 +65,7 @@ export const useWebSocket = () => {
             conv.id === newMessage.conversationId
               ? {
                   ...conv,
-                  Message: [newMessage], // Set the latest message at index 0
+                  Message: [newMessage], 
                 }
               : conv
           )

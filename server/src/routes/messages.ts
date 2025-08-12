@@ -4,7 +4,7 @@ import { userMiddleware } from "../middleware/userMiddleware.js";
 
 const router = Router();
 
-router.use(userMiddleware)
+router.use(userMiddleware);
 
 router.get(
   "/conversation/:conversationId",
@@ -16,6 +16,19 @@ router.get(
       const messages = await prisma.message.findMany({
         where: {
           conversationId,
+        },
+        select: {
+          id: true,
+          content: true,
+          createdAt: true,
+          updatedAt: true,
+          type: true,
+          sender: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
       });
       return res.status(200).json({
@@ -38,7 +51,7 @@ router.get(
 router.post(
   "/conversation/:conversationId",
   async (req: Request, res: Response) => {
-    const userId = (req as any).userId
+    const userId = (req as any).userId;
     const conversationId = req.params.conversationId;
     const { content } = req.body;
     if (!content || !conversationId)
@@ -80,8 +93,8 @@ router.delete("/:messageId", async (req: Request, res: Response) => {
       },
     });
     return res.status(200).json({
-      message: "Done deleting message"
-    })
+      message: "Done deleting message",
+    });
   } catch (error) {
     console.error("Error deleting message: ", error);
     return res.status(500).json({

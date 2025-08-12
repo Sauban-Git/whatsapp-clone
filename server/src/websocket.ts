@@ -1,7 +1,7 @@
 import { WebSocket, WebSocketServer } from "ws";
 import { parse as parseCookie } from "cookie";
 import type { Server } from "http";
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 import { v4 as uuidv4 } from "uuid";
 import {
   addConversationSubscriber,
@@ -13,13 +13,9 @@ import {
 } from "./db/redis.js";
 import { prisma } from "./db/db.js";
 
-// Extend WebSocket with user-specific data
 type ExtendedWebSocket = WebSocket & { userId?: string; clientId?: string };
 
-// Local in-memory map: clientId -> WebSocket
 const clientsMap = new Map<string, ExtendedWebSocket>();
-
-// Local map to track clientId -> Set of conversationIds
 const clientSubscriptions = new Map<string, Set<string>>();
 
 let mongoClient: MongoClient;
@@ -28,12 +24,13 @@ export async function setupWebSocket(server: Server) {
   const wss = new WebSocketServer({ server });
 
   mongoClient = new MongoClient("mongodb://localhost:27017");
+
   try {
     await mongoClient.connect();
     console.log("✅ MongoDB connected successfully");
   } catch (err) {
     console.error("❌ MongoDB connection error:", err);
-    throw err; // optionally rethrow or handle as needed
+    throw err;
   }
 
   const db = mongoClient.db("whatsapp");
@@ -49,7 +46,18 @@ export async function setupWebSocket(server: Server) {
       const conversationId = newMessage.conversationId;
       const senderId = newMessage.senderId;
 
-      // Notify subscribers of the conversation
+      // Fetch sender info from Prisma
+
+      const sender = await prisma.user.findUnique({
+        where: { id: newMessage.senderId },
+        select: { id: true, name: true },
+      });
+
+      newMessage.id = newMessage._id.toString()
+      // Attach structured sender object
+      newMessage.sender = sender;
+
+      // Notify conversation subscribers
       const convClientIds = await getConversationSubscribers(conversationId);
       for (const clientId of convClientIds) {
         const ws = clientsMap.get(clientId);
@@ -63,7 +71,7 @@ export async function setupWebSocket(server: Server) {
         }
       }
 
-      // Notify subscribers to the sender's conversation list
+      // Notify sender's conversation list subscribers
       const userClientIds = await getUserSubscribers(senderId);
       for (const clientId of userClientIds) {
         const ws = clientsMap.get(clientId);
@@ -89,9 +97,7 @@ export async function setupWebSocket(server: Server) {
         return;
       }
 
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-      });
+      const user = await prisma.user.findUnique({ where: { id: userId } });
 
       if (!user) {
         ws.close(1008, "Unauthorized");
@@ -103,14 +109,12 @@ export async function setupWebSocket(server: Server) {
       ws.clientId = clientId;
       clientsMap.set(clientId, ws);
 
-      // --- Automatically subscribe to all conversations user is part of ---
       const participants = await prisma.participant.findMany({
         where: { userId: user.id },
         select: { conversationId: true },
       });
 
       const subscribedConversations = new Set<string>();
-
       for (const { conversationId } of participants) {
         await addConversationSubscriber(conversationId, clientId);
         subscribedConversations.add(conversationId);
@@ -121,7 +125,6 @@ export async function setupWebSocket(server: Server) {
 
       clientSubscriptions.set(clientId, subscribedConversations);
 
-      // Subscribe user to their conversation list
       await addUserSubscriber(user.id, clientId);
       console.log(`User ${user.id} subscribed to their conversation list`);
 
@@ -132,12 +135,9 @@ export async function setupWebSocket(server: Server) {
           if (data.type === "subscribe") {
             if (data.conversationId) {
               await addConversationSubscriber(data.conversationId, clientId);
-
-              // Add to local tracking
               const subs = clientSubscriptions.get(clientId) || new Set();
               subs.add(data.conversationId);
               clientSubscriptions.set(clientId, subs);
-
               console.log(
                 `User ${ws.userId} subscribed to conversation ${data.conversationId}`
               );
@@ -156,10 +156,8 @@ export async function setupWebSocket(server: Server) {
       });
 
       ws.on("close", async () => {
-        // Remove from user-level Redis subscription
         await removeUserSubscriber(ws.userId!, clientId);
 
-        // Remove from all conversation subscriptions
         const subs = clientSubscriptions.get(clientId);
         if (subs) {
           for (const convId of subs) {

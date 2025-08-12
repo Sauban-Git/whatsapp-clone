@@ -11,7 +11,9 @@ export const ConversationList = () => {
     (state) => state.setMessageDisplay
   );
 
-  const setConversationId = useCoversationIdStore((state) => state.setConversationId)
+  const setConversationId = useCoversationIdStore(
+    (state) => state.setConversationId
+  );
 
   const conversationList = useConversationListStore(
     (state) => state.conversationList
@@ -38,9 +40,7 @@ export const ConversationList = () => {
   }, []);
 
   const showMessage = (conversationId: string) => {
-    console.log("ConversationId: ", conversationId)
-    console.log("Messages Rendered!")
-    setConversationId(conversationId)
+    setConversationId(conversationId);
     setMessageDisplay(true);
   };
 
@@ -53,10 +53,12 @@ export const ConversationList = () => {
           className="p-3 rounded-xl hover:bg-[#333] transition-colors cursor-pointer"
         >
           <p className="font-semibold text-white truncate">
-            {conv.name ?? "Unknown"}
+            {conv.Message[0].sender?.name ?? "Unknown"}
           </p>
           <p className="text-sm text-gray-400 truncate">
-            {conv.Message[0]?.content ?? "No message yet"}
+            {conv.Message.length > 0
+              ? `${conv.Message[0].sender.name}: ${conv.Message[0].content}`
+              : "No message yet"}
           </p>
         </li>
       ))}

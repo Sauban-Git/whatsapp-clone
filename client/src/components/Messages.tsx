@@ -80,13 +80,13 @@ export const Messages = () => {
           <div
             key={msg.id}
             className={`flex ${
-              msg.senderId === userInfo.id ? "justify-end" : "justify-start"
+              msg.sender.id === userInfo.id ? "justify-end" : "justify-start"
             }`}
           >
             <div
               className={`max-w-xs md:max-w-md px-4 py-2 rounded-lg text-sm shadow
                 ${
-                  msg.senderId === userInfo.id
+                  msg.sender.id === userInfo.id
                     ? "bg-green-600 text-white rounded-br-none"
                     : "bg-gray-700 text-white rounded-bl-none"
                 }`}

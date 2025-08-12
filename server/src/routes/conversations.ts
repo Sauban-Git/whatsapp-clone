@@ -11,34 +11,40 @@ router.get("/", async (req: Request, res: Response) => {
 
   try {
     const conversations = await prisma.conversation.findMany({
-      where: {
-        participants: {
-          some: {
-            userId: userId,
-          },
-        },
+  where: {
+    participants: {
+      some: {
+        userId: userId,
       },
+    },
+  },
+  select: {
+    id: true,
+    name: true,
+    isGroup: true,
+    createdAt: true,
+    updatedAt: true,
+    Message: {
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 1,
       select: {
         id: true,
-        name: true,
-        isGroup: true,
+        content: true,
         createdAt: true,
-        updatedAt: true,
-        Message: {
-          orderBy: {
-            createdAt: "desc",
-          },
-          take: 1,
+        senderId: true,
+        type: true,
+        sender: {
           select: {
-            id: true,
-            content: true,
-            createdAt: true,
-            senderId: true,
-            type: true,
+            id:true,
+            name: true,
           },
         },
       },
-    });
+    },
+  },
+});
 
     return res.status(200).json({
       conversations,
