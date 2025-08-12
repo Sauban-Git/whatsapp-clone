@@ -8,28 +8,28 @@ export const ConversationList = () => {
 
   const conversations: Conversation[] = [
     {
-      id: 1,
+      id: "1",
       title: "John Doe",
       lastMessage: "Hey, are we still on for tomorrow?",
     },
     {
-      id: 2,
+      id: "2",
       title: "Project Team",
       lastMessage: "Final designs have been uploaded.",
     },
     {
-      id: 3,
+      id: "3",
       title: "Sarah",
       lastMessage: "Call me when you're free.",
     },
     {
-      id: 4,
+      id: "4",
       title: "Mom",
       lastMessage: "Don't forget to bring groceries!",
     },
     // Duplicate entries to simulate scroll
     ...Array.from({ length: 12 }, (_, i) => ({
-      id: i + 5,
+      id: `${i + 5}`,
       title: `Chat ${i + 5}`,
       lastMessage: "Last message in this chat...",
     })),

@@ -1,46 +1,57 @@
 import { useEffect, useRef, useState } from "react";
 import { useMessageDisplayStore } from "../store/messageDisplayStore";
+import {
+  useMessageListStore,
+  type MessageList,
+} from "../store/messageListStore";
 
 export const Messages = () => {
   const messagesendRef = useRef<HTMLDivElement | null>(null);
   const setMessageDisplay = useMessageDisplayStore(
     (state) => state.setMessageDisplay
   );
+  const setMessagesList = useMessageListStore((state) => state.setMessageList);
+  const messageList = useMessageListStore((state) => state.messageList);
 
-  const [messages, setMessages] = useState([
-    { id: 1, text: "Hey! How are you?", from: "them" },
-    { id: 2, text: "I'm good, thanks! You?", from: "me" },
-    { id: 3, text: "Doing great. Ready for the meeting?", from: "them" },
-    { id: 4, text: "Doing great. Ready for the meeting?", from: "them" },
-    { id: 5, text: "Doing great. Ready for the meeting?", from: "them" },
-    { id: 6, text: "Doing great. Ready for the meeting?", from: "them" },
-    { id: 7, text: "Doing great. Ready for the meeting?", from: "them" },
-    { id: 8, text: "Doing great. Ready for the meeting?", from: "them" },
-    { id: 9, text: "Doing great. Ready for the meeting?", from: "them" },
-    { id: 10, text: "Doing great. Ready for the meeting?", from: "them" },
-    { id: 12, text: "Yes, all set!", from: "me" },
-    { id: 13, text: "Yes, all set!", from: "me" },
-    { id: 14, text: "Yes, all set!", from: "me" },
-    { id: 15, text: "Yes, all set!", from: "me" },
-    { id: 16, text: "Yes, all set!", from: "me" },
-    { id: 17, text: "Yes, all set!", from: "me" },
-    { id: 18, text: "Yes, all set!", from: "me" },
-  ]);
   const [newMessage, setNewMessage] = useState("");
+
+  useEffect(() => {
+    const messages: MessageList[] = [
+      { id: "1", text: "Hey! How are you?", from: "them" },
+      { id: "2", text: "I'm good, thanks! You?", from: "me" },
+      { id: "3", text: "Doing great. Ready for the meeting?", from: "them" },
+      { id: "4", text: "Doing great. Ready for the meeting?", from: "them" },
+      { id: "5", text: "Doing great. Ready for the meeting?", from: "them" },
+      { id: "6", text: "Doing great. Ready for the meeting?", from: "them" },
+      { id: "7", text: "Doing great. Ready for the meeting?", from: "them" },
+      { id: "8", text: "Doing great. Ready for the meeting?", from: "them" },
+      { id: "9", text: "Doing great. Ready for the meeting?", from: "them" },
+      { id: "10", text: "Doing great. Ready for the meeting?", from: "them" },
+      { id: "11", text: "Yes, all set!", from: "me" },
+      { id: "12", text: "Yes, all set!", from: "me" },
+      { id: "13", text: "Yes, all set!", from: "me" },
+      { id: "14", text: "Yes, all set!", from: "me" },
+      { id: "15", text: "Yes, all set!", from: "me" },
+      { id: "16", text: "Yes, all set!", from: "me" },
+      { id: "17", text: "Yes, all set!", from: "me" },
+    ];
+    setMessagesList(messages);
+  }, []);
 
   useEffect(() => {
     if (messagesendRef.current) {
       messagesendRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]);
+  }, [messageList]);
 
   const sendMessage = () => {
     if (!newMessage.trim()) return;
-    setMessages([
-      ...messages,
-      { id: Date.now(), text: newMessage, from: "me" },
+    setMessagesList([
+      ...messageList,
+      { id: `${Date.now()}`, text: newMessage, from: "me" },
     ]);
-    setNewMessage("");
+    setNewMessage("")
+
   };
 
   return (
@@ -59,7 +70,7 @@ export const Messages = () => {
       </div>
       {/* Message List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
-        {messages.map((msg) => (
+        {messageList.map((msg) => (
           <div
             key={msg.id}
             className={`flex ${

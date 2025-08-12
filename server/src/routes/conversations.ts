@@ -54,7 +54,7 @@ router.post("/", async (req: Request, res: Response) => {
     error: "Error!, Please tag body with from and to for conversation"
   })
   try {
-    const conversation = prisma.conversation.create({
+    const conversation = await prisma.conversation.create({
       data: {
         isGroup: false,
         participants: {
@@ -66,6 +66,7 @@ router.post("/", async (req: Request, res: Response) => {
       },
     });
     return res.status(200).json({
+      conversation,
       msg: "Initiated conversation",
     });
   } catch (error) {
