@@ -1,45 +1,34 @@
-import { useConversationListStore, type Conversation } from "../store/conversationListStore";
+import { useEffect } from "react";
+import {
+  useConversationListStore,
+  type Conversation,
+} from "../store/conversationListStore";
 import { useMessageDisplayStore } from "../store/messageDisplayStore";
+import axios from "../lib/axios"
 
 export const ConversationList = () => {
+  const setMessageDisplay = useMessageDisplayStore(
+    (state) => state.setMessageDisplay
+  );
+  const setConversationList = useConversationListStore(
+    (state) => state.setConversationList
+  );
 
-  const setMessageDisplay = useMessageDisplayStore((state) => state.setMessageDisplay)
-  const setConversationList = useConversationListStore((state) => state.setConversationList)
-
-  const conversations: Conversation[] = [
-    {
-      id: "1",
-      title: "John Doe",
-      lastMessage: "Hey, are we still on for tomorrow?",
-    },
-    {
-      id: "2",
-      title: "Project Team",
-      lastMessage: "Final designs have been uploaded.",
-    },
-    {
-      id: "3",
-      title: "Sarah",
-      lastMessage: "Call me when you're free.",
-    },
-    {
-      id: "4",
-      title: "Mom",
-      lastMessage: "Don't forget to bring groceries!",
-    },
-    // Duplicate entries to simulate scroll
-    ...Array.from({ length: 12 }, (_, i) => ({
-      id: `${i + 5}`,
-      title: `Chat ${i + 5}`,
-      lastMessage: "Last message in this chat...",
-    })),
-  ];
-
-  setConversationList(conversations)
-
-  const showMessage =() => {
-    setMessageDisplay(true)
+  function getConversationList() {
+    axios.get("/conversations/")
   }
+
+  useEffect(() => {
+    getConversationList();
+  })
+
+  const conversations: Conversation[] = [];
+
+  setConversationList(conversations);
+
+  const showMessage = () => {
+    setMessageDisplay(true);
+  };
 
   return (
     <ul className="overflow-y-auto h-full text-white p-2 space-y-2">
