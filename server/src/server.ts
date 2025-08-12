@@ -6,6 +6,7 @@ import { messagesRouter } from "./routes/messages.js";
 import { webhookRouter } from "./routes/webHook.js";
 import { userRouter } from "./routes/users.js";
 import cookieParser from "cookie-parser";
+import { userMiddleware } from "./middleware/userMiddleware.js";
 
 dotenv.config();
 
@@ -14,6 +15,7 @@ const port = Number(process.env.PORT) || 3000;
 const app = express();
 app.use(express.json());
 app.use(cookieParser())
+app.use(userMiddleware)
 
 app.use(
   cors({

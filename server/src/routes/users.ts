@@ -28,14 +28,22 @@ router.get("/", async (req: Request, res: Response) => {
 
 router.post("/", async (req: Request, res: Response) => {
   const { phoneNumber, name } = req.body;
-  if (!phoneNumber || !name)
+  const parsedPhone = Number(phoneNumber)
+  if (!phoneNumber || !name || isNaN(parsedPhone) || parsedPhone <= 0)
     return res.status(400).json({
-      error: "Please send valid user id",
+      error: "Please send valid phone number and name",
     });
+
   try {
-    const user = await prisma.user.create({
-      data: {
-        phoneNumber: Number(phoneNumber),
+    const user = await prisma.user.upsert({
+      where: {
+        phoneNumber: parsedPhone,
+      },
+      update: {
+        name,
+      },
+      create: {
+        phoneNumber: parsedPhone,
         name,
       },
     });
