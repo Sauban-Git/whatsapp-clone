@@ -1,14 +1,16 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import axios from "../lib/axios";
 
 export const Signup = () => {
+  const [loading, setloading] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
 
   const submit = async () => {
+    setloading(true);
     const name = nameRef.current?.value;
     const phoneNumber = phoneRef.current?.value;
-    if (!name || !phoneNumber) return null;
+    if (!name || !phoneNumber) return;
     try {
       await axios.post("/user/", {
         name,
@@ -16,6 +18,8 @@ export const Signup = () => {
       });
     } catch (error) {
       console.error("Error while axios fetching", error);
+    } finally {
+        setloading(false)
     }
   };
 
@@ -26,6 +30,7 @@ export const Signup = () => {
           Name
         </label>
         <input
+          type="text"
           ref={nameRef}
           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
         />
@@ -36,12 +41,14 @@ export const Signup = () => {
           Phone Number
         </label>
         <input
+          type="tel"
+          pattern="[0-9]{10}"
           ref={phoneRef}
           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
         />
       </div>
       <div className="relative m-5">
-        <button onClick={submit}>Submit</button>
+        <button disabled={loading} onClick={submit}>Submit</button>
       </div>
     </div>
   );
