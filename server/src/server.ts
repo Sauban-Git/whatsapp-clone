@@ -7,6 +7,8 @@ import { webhookRouter } from "./routes/webHook.js";
 import { userRouter } from "./routes/users.js";
 import cookieParser from "cookie-parser";
 import { userMiddleware } from "./middleware/userMiddleware.js";
+import http from "http"
+import { setupWebSocket } from "./websocket.js";
 
 dotenv.config();
 
@@ -32,6 +34,10 @@ app.use("/messages", messagesRouter);
 app.use("/webhook", webhookRouter);
 app.use("/user", userRouter);
 
-app.listen(port, "0.0.0.0", () => {
+const server = http.createServer(app)
+
+setupWebSocket(server)
+
+server.listen(port, "0.0.0.0", () => {
   console.log(`Server started at port: ${port}`);
 });
