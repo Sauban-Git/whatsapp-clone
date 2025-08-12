@@ -1,10 +1,12 @@
-import { useMessageDisplayStore } from "../store/messageDisplay";
+import { useConversationListStore, type Conversation } from "../store/conversationListStore";
+import { useMessageDisplayStore } from "../store/messageDisplayStore";
 
 export const ConversationList = () => {
 
   const setMessageDisplay = useMessageDisplayStore((state) => state.setMessageDisplay)
+  const setConversationList = useConversationListStore((state) => state.setConversationList)
 
-  const conversations = [
+  const conversations: Conversation[] = [
     {
       id: 1,
       title: "John Doe",
@@ -32,6 +34,8 @@ export const ConversationList = () => {
       lastMessage: "Last message in this chat...",
     })),
   ];
+
+  setConversationList(conversations)
 
   const showMessage =() => {
     setMessageDisplay(true)

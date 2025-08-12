@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useMessageDisplayStore } from "../store/messageDisplay";
+import { useMessageDisplayStore } from "../store/messageDisplayStore";
 
 export const Messages = () => {
   const messagesendRef = useRef<HTMLDivElement | null>(null);
