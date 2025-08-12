@@ -4,10 +4,8 @@ import { prisma } from "../db/db.js";
 const router = Router();
 
 router.get("/", async (req: Request, res: Response) => {
-  const {userId} = req.body;
-  if (!userId) return res.status(400).json({
-    error: "Error!, Please include userId"
-  })
+  const userId = (req as any).userId;
+
   try {
     const conversations = await prisma.conversation.findMany({
       where: {
@@ -49,8 +47,9 @@ router.get("/", async (req: Request, res: Response) => {
 });
 
 router.post("/", async (req: Request, res: Response) => {
-  const body = req.body;
-  if (!body.to || !body.from ) return res.status(400).json({
+  const {to} = req.body;
+  const userId = (req as any).userId
+  if (!to ) return res.status(400).json({
     error: "Error!, Please tag body with from and to for conversation"
   })
   try {
@@ -58,7 +57,7 @@ router.post("/", async (req: Request, res: Response) => {
       data: {
         isGroup: false,
         participants: {
-          create: [{ userId: body.to }, { userId: body.from }],
+          create: [{ userId: to }, { userId }],
         },
       },
       include: {

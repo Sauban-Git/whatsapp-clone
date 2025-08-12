@@ -3,8 +3,8 @@ import { prisma } from "../db/db.js";
 
 const router = Router();
 
-router.get("/:userId", async (req: Request, res: Response) => {
-  const userId = req.params.userId;
+router.get("/", async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
   if (!userId)
     return res.status(400).json({
       error: "Please send valid user id",
@@ -39,6 +39,13 @@ router.post("/", async (req: Request, res: Response) => {
         name,
       },
     });
+
+    res.cookie("userId", user.id, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    });
+
     return res.status(200).json({
       user,
     });
@@ -50,8 +57,8 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
-router.put("/:userId", async (req: Request, res: Response) => {
-  const userId = req.params.userId;
+router.put("/", async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
   const { name } = req.body;
   if (!userId || !name)
     return res.status(400).json({

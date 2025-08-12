@@ -35,15 +35,16 @@ router.get(
 router.post(
   "/conversation/:conversationId",
   async (req: Request, res: Response) => {
+    const userId = (req as any).userId
     const conversationId = req.params.conversationId;
-    const { content, senderId } = req.body;
-    if (!content || !senderId || !conversationId)
+    const { content } = req.body;
+    if (!content || !conversationId)
       return res.status(400).json({ error: "Please send required data" });
     try {
       const messages = await prisma.message.create({
         data: {
           content: content,
-          senderId: senderId,
+          senderId: userId,
           conversationId: conversationId,
         },
       });
