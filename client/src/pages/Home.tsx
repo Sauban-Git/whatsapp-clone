@@ -1,5 +1,7 @@
 import { Conversation } from "../components/Conversation";
 import { Menu } from "../components/Menu";
+import { Messages } from "../components/Messages";
+import { Placeholder } from "../components/Placeholder";
 
 export const Home = () => {
   return (
@@ -10,9 +12,8 @@ export const Home = () => {
       <div className="col-span-4">
         <Conversation />
       </div>
-      <div className="col-span-8 text-center bg-blue-500">
-        dlfkjhakgjhd;f lakfjdh ladjhfk fakjhfdkaj hwe iewh fiahi hiewhqi ad ci
-        qhqiifewh iq wn poewijfq fnqwifewjqhp fieuwqpkdn q
+      <div className="col-span-8">
+        <Messages />
       </div>
     </div>
   );

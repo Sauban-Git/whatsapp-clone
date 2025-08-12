@@ -1,3 +1,5 @@
+import { ConversationList } from "./ConversationList";
+
 export const Conversation = () => {
   return (
     <div className="rounded-xl h-screen flex flex-col">
@@ -13,25 +15,7 @@ export const Conversation = () => {
         </div>
       </div>
       <div className="p-3 flex-1 overflow-y-auto">
-        <ul className="">
-            <li className="p-3 rounded-xl">conversation 1</li>
-            <li className="p-3 rounded-xl">conversation 1</li>
-            <li className="p-3 rounded-xl">conversation 1</li>
-            <li className="p-3 rounded-xl">conversation 1</li>
-            <li className="p-3 rounded-xl">conversation 1</li>
-            <li className="p-3 rounded-xl">conversation 1</li>
-            <li className="p-3 rounded-xl">conversation 1</li>
-            <li className="p-3 rounded-xl">conversation 1</li>
-            <li className="p-3 rounded-xl">conversation 1</li>
-            <li className="p-3 rounded-xl">conversation 1</li>
-            <li className="p-3 rounded-xl">conversation 1</li>
-            <li className="p-3 rounded-xl">conversation 1</li>
-            <li className="p-3 rounded-xl">conversation 1</li>
-            <li className="p-3 rounded-xl">conversation 1</li>
-            <li className="p-3 rounded-xl">conversation 1</li>
-            <li className="p-3 rounded-xl">conversation 1</li>
-            <li className="p-3 rounded-xl">conversation 1</li>
-        </ul>
+        <ConversationList />
       </div>
     </div>
   );
