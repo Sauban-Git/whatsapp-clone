@@ -1,4 +1,9 @@
+import { useMessageDisplayStore } from "../store/messageDisplay";
+
 export const ConversationList = () => {
+
+  const setMessageDisplay = useMessageDisplayStore((state) => state.setMessageDisplay)
+
   const conversations = [
     {
       id: 1,
@@ -28,12 +33,17 @@ export const ConversationList = () => {
     })),
   ];
 
+  const showMessage =() => {
+    setMessageDisplay(true)
+  }
+
   return (
     <ul className="overflow-y-auto h-full text-white p-2 space-y-2">
       {conversations.map((conv) => (
         <li
+          onClick={showMessage}
           key={conv.id}
-          className="p-3 rounded-xl bg-[#2a2a2a] hover:bg-[#333] transition-colors cursor-pointer"
+          className="p-3 rounded-xl hover:bg-[#333] transition-colors cursor-pointer"
         >
           <p className="font-semibold text-white truncate">{conv.title}</p>
           <p className="text-sm text-gray-400 truncate">{conv.lastMessage}</p>

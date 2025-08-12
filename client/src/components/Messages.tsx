@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const Messages = () => {
+  const messagesendRef = useRef<HTMLDivElement | null>(null);
+  
   const [messages, setMessages] = useState([
     { id: 1, text: "Hey! How are you?", from: "them" },
     { id: 2, text: "I'm good, thanks! You?", from: "me" },
@@ -22,9 +24,18 @@ export const Messages = () => {
   ]);
   const [newMessage, setNewMessage] = useState("");
 
+  useEffect(() => {
+    if (messagesendRef.current) {
+        messagesendRef.current.scrollIntoView({behavior: "smooth"})
+    }
+  },[messages])
+
   const sendMessage = () => {
     if (!newMessage.trim()) return;
-    setMessages([...messages, { id: Date.now(), text: newMessage, from: "me" }]);
+    setMessages([
+      ...messages,
+      { id: Date.now(), text: newMessage, from: "me" },
+    ]);
     setNewMessage("");
   };
 
@@ -51,6 +62,7 @@ export const Messages = () => {
             </div>
           </div>
         ))}
+        <div ref={messagesendRef} />
       </div>
 
       {/* Input Box */}
@@ -73,4 +85,3 @@ export const Messages = () => {
     </div>
   );
 };
-
