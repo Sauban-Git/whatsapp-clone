@@ -1,14 +1,11 @@
 import { create } from "zustand";
+import type { ConversationFromApi } from "../types/types";
 
-export interface Conversation {
-  id: string;
-  title: string;
-  lastMessage: string;
-}
+
 
 interface ConversationListState {
-  conversationList: Conversation[];
-  setConversationList: (value: Conversation[]) => void;
+  conversationList: ConversationFromApi[];
+  setConversationList: (value: ConversationFromApi[]) => void;
 }
 
 export const useConversationListStore = create<ConversationListState>((set) => ({

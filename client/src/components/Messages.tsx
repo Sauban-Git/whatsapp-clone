@@ -2,10 +2,17 @@ import { useEffect, useRef, useState } from "react";
 import { useMessageDisplayStore } from "../store/messageDisplayStore";
 import {
   useMessageListStore,
-  type MessageList,
 } from "../store/messageListStore";
+import type { MessageFromApi } from "../types/types";
+import { useCoversationIdStore } from "../store/conversationIdStore";
+import { useUserInfoStore } from "../store/userInfoStore";
+import axios from "../lib/axios";
 
 export const Messages = () => {
+  const conversationId = useCoversationIdStore((state) => state.conversationId)
+
+  const userInfo = useUserInfoStore((state) => state.userInfo)
+
   const messagesendRef = useRef<HTMLDivElement | null>(null);
   const setMessageDisplay = useMessageDisplayStore(
     (state) => state.setMessageDisplay
@@ -15,27 +22,21 @@ export const Messages = () => {
 
   const [newMessage, setNewMessage] = useState("");
 
+  const getMessagesList = async () => {
+    try {
+      if (!conversationId) return;
+      const {data } = await axios.get<{messages: MessageFromApi[]}>(`/messages/conversation/${conversationId}`);
+      console.log("Messages: ",data.messages)
+      setMessagesList(data.messages)
+    }catch(error) {
+      console.error("Error while fetching messages: ", error)
+    }
+  }
+
   useEffect(() => {
-    const messages: MessageList[] = [
-      { id: "1", text: "Hey! How are you?", from: "them" },
-      { id: "2", text: "I'm good, thanks! You?", from: "me" },
-      { id: "3", text: "Doing great. Ready for the meeting?", from: "them" },
-      { id: "4", text: "Doing great. Ready for the meeting?", from: "them" },
-      { id: "5", text: "Doing great. Ready for the meeting?", from: "them" },
-      { id: "6", text: "Doing great. Ready for the meeting?", from: "them" },
-      { id: "7", text: "Doing great. Ready for the meeting?", from: "them" },
-      { id: "8", text: "Doing great. Ready for the meeting?", from: "them" },
-      { id: "9", text: "Doing great. Ready for the meeting?", from: "them" },
-      { id: "10", text: "Doing great. Ready for the meeting?", from: "them" },
-      { id: "11", text: "Yes, all set!", from: "me" },
-      { id: "12", text: "Yes, all set!", from: "me" },
-      { id: "13", text: "Yes, all set!", from: "me" },
-      { id: "14", text: "Yes, all set!", from: "me" },
-      { id: "15", text: "Yes, all set!", from: "me" },
-      { id: "16", text: "Yes, all set!", from: "me" },
-      { id: "17", text: "Yes, all set!", from: "me" },
-    ];
-    setMessagesList(messages);
+    console.log("UseEffect of Messages!")
+    getMessagesList();
+    console.log(messageList)
   }, []);
 
   useEffect(() => {
@@ -44,13 +45,18 @@ export const Messages = () => {
     }
   }, [messageList]);
 
-  const sendMessage = () => {
+  const sendMessage = async() => {
     if (!newMessage.trim()) return;
-    setMessagesList([
-      ...messageList,
-      { id: `${Date.now()}`, text: newMessage, from: "me" },
-    ]);
-    setNewMessage("")
+    try {
+      axios.post(`/messages/conversation/${conversationId}`, {
+        content: newMessage
+      })
+      setNewMessage("")
+      console.log(messageList)
+      console.log(userInfo)
+    } catch (error) {
+      console.error("Error sending messages: ", (error))
+    }
 
   };
 
@@ -74,18 +80,18 @@ export const Messages = () => {
           <div
             key={msg.id}
             className={`flex ${
-              msg.from === "me" ? "justify-end" : "justify-start"
+              msg.senderId === userInfo.id ? "justify-end" : "justify-start"
             }`}
           >
             <div
               className={`max-w-xs md:max-w-md px-4 py-2 rounded-lg text-sm shadow
                 ${
-                  msg.from === "me"
+                  msg.senderId === userInfo.id
                     ? "bg-green-600 text-white rounded-br-none"
                     : "bg-gray-700 text-white rounded-bl-none"
                 }`}
             >
-              {msg.text}
+              {msg.content}
             </div>
           </div>
         ))}

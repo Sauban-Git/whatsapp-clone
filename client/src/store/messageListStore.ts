@@ -1,14 +1,9 @@
 import { create } from "zustand";
-
-export interface MessageList {
-    id: string;
-  text: string;
-  from: string;
-}
+import type { MessageFromApi } from "../types/types";
 
 interface MessageListState {
-  messageList: MessageList[];
-  setMessageList: (value: MessageList[]) => void;
+  messageList: MessageFromApi[];
+  setMessageList: (value: MessageFromApi[]) => void;
 }
 
 export const useMessageListStore = create<MessageListState>((set) => ({

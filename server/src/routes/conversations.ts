@@ -1,7 +1,10 @@
 import { Router, type Request, type Response } from "express";
 import { prisma } from "../db/db.js";
+import { userMiddleware } from "../middleware/userMiddleware.js";
 
 const router = Router();
+
+router.use(userMiddleware)
 
 router.get("/", async (req: Request, res: Response) => {
   const userId = (req as any).userId;
@@ -20,12 +23,14 @@ router.get("/", async (req: Request, res: Response) => {
         name: true,
         isGroup: true,
         createdAt: true,
+        updatedAt: true,
         Message: {
           orderBy: {
             createdAt: "desc",
           },
           take: 1,
           select: {
+            id: true,
             content: true,
             createdAt: true,
             senderId: true,

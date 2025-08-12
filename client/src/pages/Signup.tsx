@@ -1,10 +1,12 @@
 import { useRef, useState } from "react";
 import axios from "../lib/axios";
+import { useNavigate } from "react-router-dom";
 
 export const Signup = () => {
   const [loading, setloading] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate()
 
   const submit = async () => {
     setloading(true);
@@ -12,10 +14,12 @@ export const Signup = () => {
     const phoneNumber = phoneRef.current?.value;
     if (!name || !phoneNumber) return;
     try {
-      await axios.post("/user/", {
+      const data = await axios.post("/user/", {
         name,
         phoneNumber,
       });
+      console.log(data)
+      navigate("/")
     } catch (error) {
       console.error("Error while axios fetching", error);
     } finally {
@@ -47,8 +51,8 @@ export const Signup = () => {
           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
         />
       </div>
-      <div className="relative m-5">
-        <button disabled={loading} onClick={submit}>Submit</button>
+      <div className="m-5">
+        <button className="p-3" disabled={loading} onClick={submit}>Submit</button>
       </div>
     </div>
   );

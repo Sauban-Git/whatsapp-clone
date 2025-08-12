@@ -1,9 +1,10 @@
 import { Router, type Request, type Response } from "express";
 import { prisma } from "../db/db.js";
+import { userMiddleware } from "../middleware/userMiddleware.js";
 
 const router = Router();
 
-router.get("/", async (req: Request, res: Response) => {
+router.get("/",userMiddleware, async (req: Request, res: Response) => {
   const userId = (req as any).userId;
   if (!userId)
     return res.status(400).json({
@@ -51,6 +52,7 @@ router.post("/", async (req: Request, res: Response) => {
     res.cookie("userId", user.id, {
       httpOnly: true,
       sameSite: "lax",
+      secure: false,
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     });
 
@@ -65,7 +67,7 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
-router.put("/", async (req: Request, res: Response) => {
+router.put("/",userMiddleware, async (req: Request, res: Response) => {
   const userId = (req as any).userId;
   const { name } = req.body;
   if (!userId || !name)

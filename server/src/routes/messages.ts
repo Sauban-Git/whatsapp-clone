@@ -1,7 +1,10 @@
 import { Router, type Request, type Response } from "express";
 import { prisma } from "../db/db.js";
+import { userMiddleware } from "../middleware/userMiddleware.js";
 
 const router = Router();
+
+router.use(userMiddleware)
 
 router.get(
   "/conversation/:conversationId",
