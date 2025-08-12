@@ -5,6 +5,7 @@ import { useMessageDisplayStore } from "../store/messageDisplayStore";
 import axios from "../lib/axios";
 import type { ConversationFromApi } from "../types/types";
 import { useCoversationIdStore } from "../store/conversationIdStore";
+import { useUserInfoStore } from "../store/userInfoStore";
 
 export const ConversationList = () => {
   const setMessageDisplay = useMessageDisplayStore(
@@ -22,6 +23,8 @@ export const ConversationList = () => {
   const setConversationList = useConversationListStore(
     (state) => state.setConversationList
   );
+
+  const userInfo = useUserInfoStore((state) => state.userInfo);
 
   const getConversationList = async () => {
     try {
@@ -52,9 +55,14 @@ export const ConversationList = () => {
           key={conv.id}
           className="p-3 rounded-xl hover:bg-[#333] transition-colors cursor-pointer"
         >
-          <p className="font-semibold text-white truncate">
-            {conv.Message[0].sender?.name ?? "Unknown"}
-          </p>
+          <div className="font-semibold text-white truncate">
+            <p className="font-semibold text-white truncate">
+              {conv.isGroup
+                ? conv.name
+                : conv.participants.find((p) => p.user.id !== userInfo.id)?.user
+                    .name ?? "Unknown"}
+            </p>
+          </div>
           <p className="text-sm text-gray-400 truncate">
             {conv.Message.length > 0
               ? `${conv.Message[0].sender.name}: ${conv.Message[0].content}`

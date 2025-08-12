@@ -17,6 +17,12 @@ export interface ConversationFromApi {
   createdAt: string;
   updatedAt: string;
   Message: MessageFromApi[];
+  participants: {
+    user: {
+      id: string;
+      name: string;
+    };
+  }[];
 }
 
 export interface UserInfoApi {

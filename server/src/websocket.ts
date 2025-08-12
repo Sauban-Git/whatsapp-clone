@@ -53,7 +53,7 @@ export async function setupWebSocket(server: Server) {
         select: { id: true, name: true },
       });
 
-      newMessage.id = newMessage._id.toString()
+      newMessage.id = newMessage._id.toString();
       // Attach structured sender object
       newMessage.sender = sender;
 
@@ -72,6 +72,40 @@ export async function setupWebSocket(server: Server) {
       }
 
       // Notify sender's conversation list subscribers
+      // Notify sender's conversation list subscribers
+      const conversation = await prisma.conversation.findUnique({
+        where: { id: conversationId },
+        select: {
+          id: true,
+          name: true,
+          isGroup: true,
+          createdAt: true,
+          updatedAt: true,
+          participants: {
+            select: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const activityPayload = {
+        ...newMessage,
+        conversation: {
+          id: conversation?.id,
+          name: conversation?.name,
+          isGroup: conversation?.isGroup,
+          createdAt: conversation?.createdAt,
+          updatedAt: conversation?.updatedAt,
+          participants: conversation?.participants,
+        },
+      };
+
       const userClientIds = await getUserSubscribers(senderId);
       for (const clientId of userClientIds) {
         const ws = clientsMap.get(clientId);
@@ -79,7 +113,7 @@ export async function setupWebSocket(server: Server) {
           ws.send(
             JSON.stringify({
               type: "new_conversation_activity",
-              data: newMessage,
+              data: activityPayload,
             })
           );
         }

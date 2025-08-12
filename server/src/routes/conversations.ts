@@ -4,47 +4,57 @@ import { userMiddleware } from "../middleware/userMiddleware.js";
 
 const router = Router();
 
-router.use(userMiddleware)
+router.use(userMiddleware);
 
 router.get("/", async (req: Request, res: Response) => {
   const userId = (req as any).userId;
 
   try {
     const conversations = await prisma.conversation.findMany({
-  where: {
-    participants: {
-      some: {
-        userId: userId,
-      },
-    },
-  },
-  select: {
-    id: true,
-    name: true,
-    isGroup: true,
-    createdAt: true,
-    updatedAt: true,
-    Message: {
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: 1,
-      select: {
-        id: true,
-        content: true,
-        createdAt: true,
-        senderId: true,
-        type: true,
-        sender: {
-          select: {
-            id:true,
-            name: true,
+      where: {
+        participants: {
+          some: {
+            userId: userId,
           },
         },
       },
-    },
-  },
-});
+      select: {
+        id: true,
+        name: true,
+        isGroup: true,
+        createdAt: true,
+        updatedAt: true,
+        Message: {
+          orderBy: {
+            createdAt: "desc",
+          },
+          take: 1,
+          select: {
+            id: true,
+            content: true,
+            createdAt: true,
+            senderId: true,
+            type: true,
+            sender: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        participants: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
 
     return res.status(200).json({
       conversations,
@@ -58,11 +68,12 @@ router.get("/", async (req: Request, res: Response) => {
 });
 
 router.post("/", async (req: Request, res: Response) => {
-  const {to} = req.body;
-  const userId = (req as any).userId
-  if (!to ) return res.status(400).json({
-    error: "Error!, Please tag body with from and to for conversation"
-  })
+  const { to } = req.body;
+  const userId = (req as any).userId;
+  if (!to)
+    return res.status(400).json({
+      error: "Error!, Please tag body with from and to for conversation",
+    });
   try {
     const conversation = await prisma.conversation.create({
       data: {
