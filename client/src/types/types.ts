@@ -1,3 +1,8 @@
+type MessageStatus = {
+  status: "SENT" | "DELIVERED" | "READ";
+  updatedAt: string;
+};
+
 export interface MessageFromApi {
   id: string;
   content: string;
@@ -8,6 +13,7 @@ export interface MessageFromApi {
     id: string;
     name: string;
   };
+  statuses?: MessageStatus[];
 }
 
 export interface ConversationFromApi {

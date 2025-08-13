@@ -9,6 +9,8 @@ router.use(userMiddleware);
 router.get(
   "/conversation/:conversationId",
   async (req: Request, res: Response) => {
+    const userId = (req as any).userId;
+    console.log("type of api userID: ", typeof userId);
     const conversationId = req.params.conversationId;
     if (!conversationId)
       return res.status(403).json({ error: "No conversation id provided" });
@@ -29,8 +31,20 @@ router.get(
               name: true,
             },
           },
+          statuses: {
+            where: {
+              userId: userId
+            },
+            select: {
+              status: true,
+              updatedAt: true,
+            },
+          },
         },
       });
+
+      console.dir(messages, { depth: null });
+
       return res.status(200).json({
         messages,
       });
@@ -54,23 +68,36 @@ router.post(
     const userId = (req as any).userId;
     const conversationId = req.params.conversationId;
     const { content } = req.body;
+
     if (!content || !conversationId)
       return res.status(400).json({ error: "Please send required data" });
+
     try {
-      const messages = await prisma.message.create({
+      // Create the message
+      const message = await prisma.message.create({
         data: {
-          content: content,
+          content,
           senderId: userId,
-          conversationId: conversationId,
+          conversationId,
         },
       });
+
+      // Create status only for sender (not all participants)
+      await prisma.messageStatus.create({
+        data: {
+          messageId: message.id,
+          userId: userId, // Only sender
+          status: "SENT",
+        },
+      });
+
       return res.status(200).json({
-        message: "Done sending message",
+        message: "Message sent with sender status created",
       });
     } catch (error) {
       console.error("Error creating message: ", error);
       return res.status(500).json({
-        error: "Error sending messages",
+        error: "Error sending message",
       });
     }
   }

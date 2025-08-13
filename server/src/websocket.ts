@@ -62,10 +62,46 @@ export async function setupWebSocket(server: Server) {
       for (const clientId of convClientIds) {
         const ws = clientsMap.get(clientId);
         if (ws && ws.readyState === WebSocket.OPEN) {
+          if (!ws.userId) return;
+          console.log("type of ws userID: ",typeof ws.userId)
+          // Fetch delivery status for this user (the recipient)
+          const statuses = await prisma.messageStatus.findUnique({
+            where: {
+              messageId_userId: {
+                messageId: newMessage._id.toString(),
+                userId: ws.userId!,
+              },
+            },
+            select: {
+              status: true,
+              updatedAt: true,
+            },
+          });
+
+          console.log("ws statuses: ", [statuses])
+
+
+          // Build enriched payload
+          const messagePayload = {
+            id: newMessage._id.toString(),
+            content: newMessage.content,
+            createdAt: newMessage.createdAt,
+            updatedAt: newMessage.updatedAt,
+            type: newMessage.type,
+            conversationId: newMessage.conversationId,
+            sender: {
+              id: sender?.id,
+              name: sender?.name,
+            },
+            statuses: [statuses], // Now includes the delivery status for this user
+          };
+
+
+          // Send enriched message
           ws.send(
             JSON.stringify({
               type: "new_message",
-              data: newMessage,
+              data: messagePayload,
             })
           );
         }

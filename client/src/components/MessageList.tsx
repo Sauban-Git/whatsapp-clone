@@ -6,10 +6,28 @@ export const MessageList = () => {
   const userInfo = useUserInfoStore((state) => state.userInfo);
   const messageList = useMessageListStore((state) => state.messageList);
 
+  const getStatusIcon = (status?: string) => {
+    switch (status) {
+      case "SENT":
+        return "/images/sent.svg";
+      case "DELIVERED":
+        return "/images/delivered.svg";
+      case "READ":
+        return "/images/read.svg";
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="flex-1 px-2 py-2 space-y-2 overflow-y-auto">
       {messageList.map((msg) => {
         const isSender = msg.sender.id === userInfo.id;
+
+        const status = msg.statuses?.[0]?.status;
+        const statusIcon = getStatusIcon(status);
+
+        isSender ? console.log(msg.statuses) : console.log(msg.sender.id);
         return (
           <div
             key={msg.id}
@@ -24,8 +42,11 @@ export const MessageList = () => {
             }`}
             >
               {msg.content}
-              <div className="text-[10px] text-gray-200 opacity-70 mt-1 text-right">
-                {dayjs(msg.createdAt).format("h:mm A")}
+              <div className="flex items-center justify-end gap-1 mt-1 text-[10px] text-gray-200 opacity-70">
+                <span>{dayjs(msg.createdAt).format("h:mm A")}</span>
+                {isSender && statusIcon && (
+                  <img src={statusIcon} alt={status} className="w-6" />
+                )}
               </div>
             </div>
           </div>
