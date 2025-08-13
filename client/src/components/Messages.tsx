@@ -11,6 +11,8 @@ export const Messages = () => {
     (state) => state.conversationId
   );
 
+  const conversationName = useConversationIdStore((state) => state.conversationName)
+
   const userInfo = useUserInfoStore((state) => state.userInfo);
 
   const messagesendRef = useRef<HTMLDivElement | null>(null);
@@ -66,7 +68,7 @@ export const Messages = () => {
               <img className="w-8" src="/images/back.svg" alt="back" />
             </button>
           </div>
-          <div className="mt-1">Hello</div>
+          <div className="mt-1">{conversationName}</div>
         </div>
         <div>
           <button>
