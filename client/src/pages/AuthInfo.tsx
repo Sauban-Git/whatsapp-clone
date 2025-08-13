@@ -14,7 +14,7 @@ export const AuthInfo = () => {
       const { data } = await axios.get<{ user: UserInfoApi }>("/user/");
       console.log(data.user)
       setUserInfo(data.user);
-      navigate("/home");
+      navigate("/");
     } catch (error) {
       console.error("Looks like user isnt logged in: ", error);
       navigate("/signup");

@@ -19,7 +19,7 @@ export const Home = () => {
       setUserInfo(data.user);
     } catch (error) {
       console.error("Looks like user isnt logged in: ", error);
-      navigate("/signup");
+      navigate("/loading");
     }
   };
 

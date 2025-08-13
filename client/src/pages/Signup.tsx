@@ -19,7 +19,7 @@ export const Signup = () => {
         name,
         phoneNumber,
       });
-      navigate("/");
+      navigate("/loading");
     } catch (error) {
       console.error("Error while axios fetching", error);
     } finally {
