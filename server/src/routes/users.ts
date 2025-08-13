@@ -4,7 +4,7 @@ import { userMiddleware } from "../middleware/userMiddleware.js";
 
 const router = Router();
 
-router.get("/",userMiddleware, async (req: Request, res: Response) => {
+router.get("/", userMiddleware, async (req: Request, res: Response) => {
   const userId = (req as any).userId;
   if (!userId)
     return res.status(400).json({
@@ -27,9 +27,47 @@ router.get("/",userMiddleware, async (req: Request, res: Response) => {
   }
 });
 
+router.get(
+  "/users/:query",
+  userMiddleware,
+  async (req: Request, res: Response) => {
+    const userId = (req as any).userId;
+    const query = req.params.query;
+    if (!userId || !query)
+      return res.status(400).json({
+        error: "Please send valid user id",
+      });
+    try {
+      const users = await prisma.user.findMany({
+        where: {
+          name: {
+            contains: query,
+            mode: "insensitive",
+          },
+          NOT: {
+            id: userId,
+          },
+        },
+        select: {
+          id: true,
+          name: true,
+        },
+      });
+      return res.status(200).json({
+        users,
+      });
+    } catch (error) {
+      console.log("Error fetching all user: ", error);
+      return res.status(500).json({
+        error: "Error getting all users list",
+      });
+    }
+  }
+);
+
 router.post("/", async (req: Request, res: Response) => {
   const { phoneNumber, name } = req.body;
-  const parsedPhone = Number(phoneNumber)
+  const parsedPhone = Number(phoneNumber);
   if (!phoneNumber || !name || isNaN(parsedPhone) || parsedPhone <= 0)
     return res.status(400).json({
       error: "Please send valid phone number and name",
@@ -67,7 +105,7 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
-router.put("/",userMiddleware, async (req: Request, res: Response) => {
+router.put("/", userMiddleware, async (req: Request, res: Response) => {
   const userId = (req as any).userId;
   const { name } = req.body;
   if (!userId || !name)
