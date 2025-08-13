@@ -88,9 +88,9 @@ router.post("/", async (req: Request, res: Response) => {
     });
 
     res.cookie("userId", user.id, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: false,
+      httpOnly: process.env.HTTP_ONLY === "true",
+      sameSite: process.env.SAME_SITE as "lax" | "strict" | "none" | undefined,
+      secure: process.env.SECURE === "true",
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     });
 

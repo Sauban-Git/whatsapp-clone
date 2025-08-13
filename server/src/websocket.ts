@@ -3,6 +3,7 @@ import { parse as parseCookie } from "cookie";
 import type { Server } from "http";
 import { MongoClient, ObjectId } from "mongodb";
 import { v4 as uuidv4 } from "uuid";
+import dotenv from "dotenv"
 import {
   addConversationSubscriber,
   addUserSubscriber,
@@ -12,6 +13,8 @@ import {
   removeConversationSubscriber,
 } from "./db/redis.js";
 import { prisma } from "./db/db.js";
+
+dotenv.config()
 
 type ExtendedWebSocket = WebSocket & { userId?: string; clientId?: string };
 
@@ -23,7 +26,7 @@ let mongoClient: MongoClient;
 export async function setupWebSocket(server: Server) {
   const wss = new WebSocketServer({ server });
 
-  mongoClient = new MongoClient("mongodb://localhost:27017");
+  mongoClient = new MongoClient(`${process.env.DATABASE_URL}`);
 
   try {
     await mongoClient.connect();
