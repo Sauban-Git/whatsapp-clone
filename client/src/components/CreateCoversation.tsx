@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
 import axios from "../lib/axios";
+import { useSearchDisplayStore } from "../store/searchDisplayStore";
+import { useMessageDisplayStore } from "../store/messageDisplayStore";
+import { useConversationIdStore } from "../store/conversationIdStore";
+import { useConversationListStore } from "../store/conversationListStore";
+import { useUserInfoStore } from "../store/userInfoStore";
+import type { ConversationFromApi } from "../types/types";
 
 type User = {
   id: string;
@@ -11,6 +17,23 @@ export const CreateConversation = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const setMessageDisplay = useMessageDisplayStore(
+    (state) => state.setMessageDisplay
+  );
+
+  const userInfo = useUserInfoStore((state) => state.userInfo);
+
+  const setConversationId = useConversationIdStore(
+    (state) => state.setConversationId
+  );
+
+  const conversationList = useConversationListStore(
+    (state) => state.conversationList
+  );
+
+  const setSearchDisplayState = useSearchDisplayStore(
+    (state) => state.setSearchDisplay
+  );
   // Fetch users filtered by search query
   const fetchUsers = async (query: string) => {
     if (!query.trim()) {
@@ -31,6 +54,24 @@ export const CreateConversation = () => {
     }
   };
 
+  const showMessage = (conversationId: string) => {
+    setMessageDisplay(false);
+    const conversation = conversationList.find(
+      (conv) => conv.id === conversationId
+    );
+
+    const conversationName = conversation?.isGroup
+      ? conversation.name
+      : conversation?.participants.find((p) => p.user.id !== userInfo.id)?.user
+          .name;
+
+    setConversationId({
+      conversationId,
+      conversationName: conversationName ?? "Unknown",
+    });
+    setMessageDisplay(true);
+  };
+
   // Debounce search input
   useEffect(() => {
     const delay = setTimeout(() => {
@@ -43,13 +84,16 @@ export const CreateConversation = () => {
   // Start conversation by sending user id
   const startConversation = async (userId: string) => {
     try {
-      await axios.post("/conversations/", { to: userId });
+      const { data } = await axios.post<{ conversation: ConversationFromApi }>(
+        "/conversations/",
+        { to: userId }
+      );
       console.log("Conversation started with:", userId);
-      // Optional: redirect or update conversation list here
+      showMessage(data.conversation.id);
+      setSearchDisplayState(false);
     } catch (error) {
       console.error("Error starting conversation:", error);
     }
-    
   };
 
   return (

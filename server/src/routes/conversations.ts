@@ -75,7 +75,40 @@ router.post("/", async (req: Request, res: Response) => {
       error: "Error!, Please tag body with from and to for conversation",
     });
   try {
-    const conversation = await prisma.conversation.create({
+    // 1. Find existing conversation with exactly these two participants
+    const existingConversation = await prisma.conversation.findFirst({
+      where: {
+        isGroup: false,
+        participants: {
+          every: {
+            userId: {
+              in: [userId, to],
+            },
+          },
+          // Also make sure it ONLY has these two participants
+          some: {},
+        },
+      },
+      include: {
+        participants: true,
+      },
+    });
+
+    // 2. If exists, return it
+    if (
+      existingConversation &&
+      existingConversation.participants.length === 2 &&
+      existingConversation.participants.some((p) => p.userId === userId) &&
+      existingConversation.participants.some((p) => p.userId === to)
+    ) {
+      return res.status(200).json({
+        conversation: existingConversation,
+        msg: "Conversation already exists",
+      });
+    }
+
+    // 3. Otherwise, create new conversation
+    const newConversation = await prisma.conversation.create({
       data: {
         isGroup: false,
         participants: {
@@ -86,12 +119,13 @@ router.post("/", async (req: Request, res: Response) => {
         participants: true,
       },
     });
+
     return res.status(200).json({
-      conversation,
-      msg: "Initiated conversation",
+      conversation: newConversation,
+      msg: "Initiated new conversation",
     });
   } catch (error) {
-    console.error("Error creating conversation: ", error);
+    console.error("Error creating or finding conversation: ", error);
     return res.status(500).json({
       error: "Unable to initiate conversation now.",
     });

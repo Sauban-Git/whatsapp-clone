@@ -15,11 +15,10 @@ export const Signup = () => {
     const phoneNumber = phoneRef.current?.value;
     if (!name || !phoneNumber) return setloading(false);
     try {
-      const data = await axios.post("/user/", {
+      await axios.post("/user/", {
         name,
         phoneNumber,
       });
-      console.log(data);
       navigate("/");
     } catch (error) {
       console.error("Error while axios fetching", error);
