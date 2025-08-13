@@ -11,37 +11,33 @@ export const Conversation = () => {
   );
 
   return (
-    <div className="bg-gray-900 text-white">
-      <div className="border flex justify-between">
-        <div className="font-semibold text-3xl p-2">WhatsApp</div>
+    <div className="bg-gray-900 text-white min-h-[100dvh] flex flex-col border-r border-gray-800">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700 bg-gray-900 sticky top-0 z-10">
+        {/* App Title */}
+        <div className="text-2xl font-bold">WhatsApp</div>
 
+        {/* Right-Side Buttons */}
         {searchDisplayState ? (
-          <div>
-            <button onClick={() => setSearchDisplayState(false)}>
-              <img className="w-10 my-2 mx-6" src="/images/cut.svg" alt="menu" />
+          <button onClick={() => setSearchDisplayState(false)}>
+            <img className="w-8 h-8" src="/images/cut.svg" alt="Close" />
+          </button>
+        ) : (
+          <div className=" flex justify-center">
+            <button onClick={() => setSearchDisplayState(true)}>
+              <img
+                className="w-7 h-7"
+                src="/images/addConversation.svg"
+                alt="Add"
+              />
             </button>
           </div>
-        ) : (
-          <div className="flex justify-center gap-4 m-3">
-            <div>
-              <button onClick={() => setSearchDisplayState(true)}>
-                <img
-                  className="w-8"
-                  src="/images/addConversation.svg"
-                  alt="Add conversation"
-                />
-              </button>
-            </div>
-            <div>
-              <button>
-                <img className="w-6" src="/images/menu.svg" alt="menu" />
-              </button>
-            </div>
-          </div>
-        )} 
+        )}
       </div>
-      <div className="bg-red-500">
-        {!searchDisplayState ? <ConversationList /> : <CreateConversation />}
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto px-4 py-2">
+        {searchDisplayState ? <CreateConversation /> : <ConversationList />}
       </div>
     </div>
   );

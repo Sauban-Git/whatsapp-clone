@@ -61,31 +61,30 @@ export const ConversationList = () => {
   };
 
   return (
-    <div className="overflow-auto">
-
-    <ul className="">
-      {conversationList.map((conv) => (
-        <li
-          onClick={() => showMessage(conv.id)}
-          key={conv.id}
-          className=""
-        >
-          <div className="">
-            <p className="">
-              {conv.isGroup
-                ? conv.name
-                : conv.participants.find((p) => p.user.id !== userInfo.id)?.user
-                    .name ?? "Unknown"}
-            </p>
-          </div>
-          <p className="">
-            {conv.Message.length > 0
-              ? `${conv.Message[0].sender.name}: ${conv.Message[0].content}`
-              : "No message yet"}
-          </p>
-        </li>
-      ))}
-    </ul>
+    <div className="overflow-y-auto flex-1 bg-gray-900 text-white px-2 py-4">
+      <ul className="space-y-2">
+        {conversationList.map((conv) => (
+          <li
+            onClick={() => showMessage(conv.id)}
+            key={conv.id}
+            className="cursor-pointer hover:bg-gray-800 active:bg-gray-700 transition-colors duration-150 rounded-xl p-4"
+          >
+            <div className="">
+              <p className="text-white font-semibold text-base truncate">
+                {conv.isGroup
+                  ? conv.name
+                  : conv.participants.find((p) => p.user.id !== userInfo.id)
+                      ?.user.name ?? "Unknown"}
+              </p>
+              <p className="text-sm text-gray-400 truncate mt-1">
+                {conv.Message.length > 0
+                  ? `${conv.Message[0].sender.name}: ${conv.Message[0].content}`
+                  : "No message yet"}
+              </p>
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };

@@ -60,38 +60,44 @@ export const Messages = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-gray-900 flex flex-col">
-      <div className="sticky top-0 z-10 bg-gray-900 border-b border-gray-700 p-2 flex items-center gap-4">
+    <div className="h-screen bg-gray-900 flex flex-col">
+      {/* Top Bar */}
+      <div className="sticky top-0 z-10 bg-gray-900 border-b border-gray-700 p-3 flex items-center gap-4">
         <button onClick={() => setMessageDisplay(false)}>
           <img className="w-8" src="/images/back.svg" alt="back" />
         </button>
         <div className="text-white">{conversationName}</div>
       </div>
-      <div className="flex-1 overflow-y-auto px-4 py-2">
+
+      {/* Scrollable Message List */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-2">
         <MessageList />
         <div ref={messagesendRef} />
       </div>
 
-      <div className="flex items-center justify-between gap-2 p-3 rounded-full border border-gray-700 bg-gray-800 sticky bottom-0">
-        <input
-          type="text"
-          value={newMessage}
-          onFocus={() => {
-            setTimeout(() => {
-              messagesendRef.current?.scrollIntoView({ behavior: "smooth" });
-            }, 100);
-          }}
-          onChange={(e) => setNewMessage(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-          placeholder="Type a message"
-          className="flex-1 px-4 py-2 rounded-full bg-gray-700 text-white placeholder-gray-400 outline-none"
-        />
-        <button
-          onClick={sendMessage}
-          className="px-4 py-2 rounded-full bg-[#25D366] text-white font-semibold hover:bg-[#1ebc5a] transition-colors duration-200"
-        >
-          Send
-        </button>
+      {/* Bottom Input Bar */}
+      <div className="sticky bottom-0 z-10 bg-gray-800 p-3 border-t border-gray-700">
+        <div className="flex items-center justify-between gap-2 rounded-full bg-gray-700 px-3 py-2">
+          <input
+            type="text"
+            value={newMessage}
+            onFocus={() => {
+              setTimeout(() => {
+                messagesendRef.current?.scrollIntoView({ behavior: "smooth" });
+              }, 100);
+            }}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            placeholder="Type a message"
+            className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none px-2"
+          />
+          <button
+            onClick={sendMessage}
+            className="px-4 py-2 rounded-full bg-[#25D366] text-white font-semibold hover:bg-[#1ebc5a] transition-colors duration-200"
+          >
+            Send
+          </button>
+        </div>
       </div>
     </div>
   );

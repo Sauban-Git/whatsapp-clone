@@ -33,18 +33,18 @@ export const Home = () => {
   );
 
   return (
-    <div className="md:grid md:grid-cols-13 bg-stone-900 text-white">
+    <div className="md:grid md:grid-cols-18 bg-stone-900 text-white">
       <div className="hidden md:block md:col-span-1">
         <Menu />
       </div>
-      <div className="col-span-12 grid md:grid-cols-3">
+      <div className="col-span-17 md:grid md:grid-cols-3">
         <div className="hidden md:block md:col-span-1">
           <Conversation />
         </div>
         <div className="md:hidden col-span-2">
           {!messageDisplay ? <Conversation /> : <Messages />}
         </div>
-        <div className="hidden md:block md:col-span-2">
+        <div className="hidden md:block md:col-span-2 ">
           {!messageDisplay ? <Placeholder /> : <Messages />}
         </div>
       </div>
