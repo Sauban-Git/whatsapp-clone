@@ -11,22 +11,22 @@ export const Conversation = () => {
   );
 
   return (
-    <div className="h-screen flex flex-col border-x border-gray-500">
-      <div className="flex justify-between rounded-xl ">
-        <div className="mx-3 my-2 text-2xl font-semibold">WhatsApp</div>
+    <div className="bg-gray-900 text-white">
+      <div className="border flex justify-between">
+        <div className="font-semibold text-3xl p-2">WhatsApp</div>
 
         {searchDisplayState ? (
           <div>
             <button onClick={() => setSearchDisplayState(false)}>
-              <img className="w-8" src="/images/cut.svg" alt="menu" />
+              <img className="w-10 my-2 mx-6" src="/images/cut.svg" alt="menu" />
             </button>
           </div>
         ) : (
-          <div className="flex gap-4 mx-3 my-2">
+          <div className="flex justify-center gap-4 m-3">
             <div>
               <button onClick={() => setSearchDisplayState(true)}>
                 <img
-                  className="w-6"
+                  className="w-8"
                   src="/images/addConversation.svg"
                   alt="Add conversation"
                 />
@@ -38,9 +38,9 @@ export const Conversation = () => {
               </button>
             </div>
           </div>
-        )}
+        )} 
       </div>
-      <div className="p-3 flex-1 overflow-y-auto">
+      <div className="bg-red-500">
         {!searchDisplayState ? <ConversationList /> : <CreateConversation />}
       </div>
     </div>

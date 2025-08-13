@@ -37,11 +37,11 @@ export const Home = () => {
       <div className="hidden md:block md:col-span-1">
         <Menu />
       </div>
-      <div className="md:col-span-12 md:grid md:grid-cols-3">
+      <div className="col-span-12 grid md:grid-cols-3">
         <div className="hidden md:block md:col-span-1">
           <Conversation />
         </div>
-        <div className="md:hidden">
+        <div className="md:hidden col-span-2">
           {!messageDisplay ? <Conversation /> : <Messages />}
         </div>
         <div className="hidden md:block md:col-span-2">

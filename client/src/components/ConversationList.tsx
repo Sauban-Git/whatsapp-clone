@@ -61,22 +61,24 @@ export const ConversationList = () => {
   };
 
   return (
-    <ul className="overflow-y-auto h-full text-white p-2 space-y-2">
+    <div className="overflow-auto">
+
+    <ul className="">
       {conversationList.map((conv) => (
         <li
           onClick={() => showMessage(conv.id)}
           key={conv.id}
-          className="p-3 rounded-xl hover:bg-[#333] transition-colors cursor-pointer"
+          className=""
         >
-          <div className="font-semibold text-white truncate">
-            <p className="font-semibold text-white truncate">
+          <div className="">
+            <p className="">
               {conv.isGroup
                 ? conv.name
                 : conv.participants.find((p) => p.user.id !== userInfo.id)?.user
                     .name ?? "Unknown"}
             </p>
           </div>
-          <p className="text-sm text-gray-400 truncate">
+          <p className="">
             {conv.Message.length > 0
               ? `${conv.Message[0].sender.name}: ${conv.Message[0].content}`
               : "No message yet"}
@@ -84,5 +86,6 @@ export const ConversationList = () => {
         </li>
       ))}
     </ul>
+    </div>
   );
 };

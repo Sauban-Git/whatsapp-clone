@@ -3,17 +3,17 @@ import { useMessageDisplayStore } from "../store/messageDisplayStore";
 import { useMessageListStore } from "../store/messageListStore";
 import type { MessageFromApi } from "../types/types";
 import { useConversationIdStore } from "../store/conversationIdStore";
-import { useUserInfoStore } from "../store/userInfoStore";
 import axios from "../lib/axios";
+import { MessageList } from "./MessageList";
 
 export const Messages = () => {
   const conversationId = useConversationIdStore(
     (state) => state.conversationId
   );
 
-  const conversationName = useConversationIdStore((state) => state.conversationName)
-
-  const userInfo = useUserInfoStore((state) => state.userInfo);
+  const conversationName = useConversationIdStore(
+    (state) => state.conversationName
+  );
 
   const messagesendRef = useRef<HTMLDivElement | null>(null);
   const setMessageDisplay = useMessageDisplayStore(
@@ -60,47 +60,19 @@ export const Messages = () => {
   };
 
   return (
-    <div className="flex flex-col sm:h-screen bg-[#121212] text-white">
-      <div className="p-3 flex justify-between sticky top-0 bg-[#121212]">
-        <div className="flex justify-start gap-4">
-          <div>
-            <button className="" onClick={() => setMessageDisplay(false)}>
-              <img className="w-8" src="/images/back.svg" alt="back" />
-            </button>
-          </div>
-          <div className="mt-1">{conversationName}</div>
-        </div>
-        <div>
-          <button>
-            <img className="w-8" src="/images/menu.svg" alt="menu" />
-          </button>
-        </div>
+    <div className="min-h-[100dvh] bg-gray-900 flex flex-col">
+      <div className="sticky top-0 z-10 bg-gray-900 border-b border-gray-700 p-2 flex items-center gap-4">
+        <button onClick={() => setMessageDisplay(false)}>
+          <img className="w-8" src="/images/back.svg" alt="back" />
+        </button>
+        <div className="text-white">{conversationName}</div>
       </div>
-      {/* Message List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
-        {messageList.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${
-              msg.sender.id === userInfo.id ? "justify-end" : "justify-start"
-            }`}
-          >
-            <div
-              className={`max-w-xs md:max-w-md px-4 py-2 rounded-lg text-sm shadow
-                ${
-                  msg.sender.id === userInfo.id
-                    ? "bg-green-600 text-white rounded-br-none"
-                    : "bg-gray-700 text-white rounded-bl-none"
-                }`}
-            >
-              {msg.content}
-            </div>
-          </div>
-        ))}
+      <div className="flex-1 overflow-y-auto px-4 py-2">
+        <MessageList />
         <div ref={messagesendRef} />
       </div>
-      {/* Input Box */}
-      <div className="p-2 sticky bottom-0 bg-[#1e1e1e] flex items-center space-x-2 rounded-4xl border-t border-gray-700 my-3">
+
+      <div className="flex items-center justify-between gap-2 p-3 rounded-full border border-gray-700 bg-gray-800 sticky bottom-0">
         <input
           type="text"
           value={newMessage}
@@ -112,11 +84,11 @@ export const Messages = () => {
           onChange={(e) => setNewMessage(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
           placeholder="Type a message"
-          className="flex-1 px-4 py-2 rounded-full text-white placeholder-gray-400 focus:outline-none"
+          className="flex-1 px-4 py-2 rounded-full bg-gray-700 text-white placeholder-gray-400 outline-none"
         />
         <button
           onClick={sendMessage}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full"
+          className="px-4 py-2 rounded-full bg-[#25D366] text-white font-semibold hover:bg-[#1ebc5a] transition-colors duration-200"
         >
           Send
         </button>
