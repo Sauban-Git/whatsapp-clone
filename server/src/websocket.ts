@@ -87,6 +87,7 @@ export async function setupWebSocket(server: Server) {
                 select: {
                   id: true,
                   name: true,
+                  phoneNumber: true,
                 },
               },
             },

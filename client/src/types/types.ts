@@ -21,6 +21,7 @@ export interface ConversationFromApi {
     user: {
       id: string;
       name: string;
+      phoneNumber: string;
     };
   }[];
 }

@@ -16,7 +16,6 @@ export const Home = () => {
   const checkUser = async () => {
     try {
       const { data } = await axios.get<{ user: UserInfoApi }>("/user/");
-      console.log(data.user);
       setUserInfo(data.user);
     } catch (error) {
       console.error("Looks like user isnt logged in: ", error);

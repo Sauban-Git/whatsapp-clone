@@ -65,9 +65,15 @@ export const CreateConversation = () => {
       : conversation?.participants.find((p) => p.user.id !== userInfo.id)?.user
           .name;
 
+    const conversationPhone = conversation?.isGroup
+      ? conversation.name
+      : conversation?.participants.find((p) => p.user.id !== userInfo.id)?.user
+          .phoneNumber;
+
     setConversationId({
       conversationId,
       conversationName: conversationName ?? "Unknown",
+      conversationPhone: conversationPhone ?? "Missing Number"
     });
     setMessageDisplay(true);
   };

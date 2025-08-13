@@ -15,6 +15,10 @@ export const Messages = () => {
     (state) => state.conversationName
   );
 
+  const conversationNumber = useConversationIdStore(
+    (state) => state.conversationPhone
+  );
+
   const messagesendRef = useRef<HTMLDivElement | null>(null);
   const setMessageDisplay = useMessageDisplayStore(
     (state) => state.setMessageDisplay
@@ -66,7 +70,7 @@ export const Messages = () => {
         <button onClick={() => setMessageDisplay(false)}>
           <img className="w-8" src="/images/back.svg" alt="back" />
         </button>
-        <div className="text-white">{conversationName}</div>
+        <div className="text-white">{conversationName}: {conversationNumber}</div>
       </div>
 
       {/* Scrollable Message List */}
