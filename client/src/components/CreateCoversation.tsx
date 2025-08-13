@@ -49,6 +49,7 @@ export const CreateConversation = () => {
     } catch (error) {
       console.error("Error starting conversation:", error);
     }
+    
   };
 
   return (
