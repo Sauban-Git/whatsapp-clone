@@ -12,6 +12,8 @@ import { setupWebSocket } from "./websocket.js";
 
 dotenv.config();
 
+const fe_urls = process.env.CLIENT_URL?.split(",") || [];
+
 const port = Number(process.env.PORT) || 3000;
 
 const app = express();
@@ -20,11 +22,7 @@ app.use(cookieParser())
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://192.168.31.54:5173",
-      "http://192.168.31.55:5173",
-    ],
+    origin: fe_urls,
     credentials: true,
   })
 );
