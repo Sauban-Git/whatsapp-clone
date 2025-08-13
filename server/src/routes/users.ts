@@ -68,9 +68,9 @@ router.get(
 router.post("/", async (req: Request, res: Response) => {
   const { phoneNumber, name } = req.body;
   const parsedPhone = Number(phoneNumber);
-  if (!phoneNumber || !name || isNaN(parsedPhone) || parsedPhone <= 0)
+  if (!phoneNumber || isNaN(parsedPhone) || parsedPhone <= 0)
     return res.status(400).json({
-      error: "Please send valid phone number and name",
+      error: "Please send valid phone number",
     });
 
   try {
