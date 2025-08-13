@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { useMessageListStore } from "../store/messageListStore";
 import { useUserInfoStore } from "../store/userInfoStore";
 
@@ -15,14 +16,17 @@ export const MessageList = () => {
             className={`flex ${isSender ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-[75%] px-4 py-2 text-sm rounded-xl shadow-md
+              className={`max-w-[75%] px-4 py-2 text-sm rounded-xl shadow-md relative
             ${
               isSender
-                ? "bg-[#25D366] text-white rounded-br-none"
+                ? "bg-[#144D37] text-white rounded-br-none"
                 : "bg-gray-700 text-white rounded-bl-none"
             }`}
             >
               {msg.content}
+              <div className="text-[10px] text-gray-200 opacity-70 mt-1 text-right">
+                {dayjs(msg.createdAt).format("h:mm A")}
+              </div>
             </div>
           </div>
         );
