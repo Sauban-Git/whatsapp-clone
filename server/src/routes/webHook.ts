@@ -12,6 +12,7 @@ const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
 router.post("/", upload.single("payload"), async (req, res) => {
+  console.log("hitted webhook");
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
   try {
@@ -107,10 +108,10 @@ router.post("/", upload.single("payload"), async (req, res) => {
 
               // Save message
               const message = await prisma.message.upsert({
-                where: { id: msg.id },
+                where: { externalId: msg.id },
                 update: {},
                 create: {
-                  id: msg.id,
+                  externalId: msg.id,
                   content,
                   type: messageType,
                   senderId: sender.id,
@@ -140,10 +141,14 @@ router.post("/", upload.single("payload"), async (req, res) => {
                 ? DeliveryStatus.READ
                 : DeliveryStatus.DELIVERED;
 
+              const message = await prisma.message.findFirst({
+                where: { externalId: msg.id }, // msg.id is the WhatsApp ID
+              });
+
               await prisma.messageStatus.upsert({
                 where: {
                   messageId_userId: {
-                    messageId: msg.id,
+                    messageId: message?.id ?? "",
                     userId: sender.id,
                   },
                 },

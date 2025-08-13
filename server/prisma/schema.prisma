@@ -67,6 +67,8 @@ model Message {
   content String?
   type    MessageType @default(TEXT)
 
+  externalId     String? @unique
+
   sender   User   @relation(fields: [senderId], references: [id])
   senderId String @db.ObjectId
 

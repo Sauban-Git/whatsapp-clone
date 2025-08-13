@@ -76,6 +76,7 @@ router.post(
       // Create the message
       const message = await prisma.message.create({
         data: {
+          externalId: String(Date.now()),
           content,
           senderId: userId,
           conversationId,
