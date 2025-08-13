@@ -4,7 +4,7 @@ import { useConversationListStore } from "../store/conversationListStore";
 import { useMessageDisplayStore } from "../store/messageDisplayStore";
 import axios from "../lib/axios";
 import type { ConversationFromApi } from "../types/types";
-import { useCoversationIdStore } from "../store/conversationIdStore";
+import { useConversationIdStore } from "../store/conversationIdStore";
 import { useUserInfoStore } from "../store/userInfoStore";
 
 export const ConversationList = () => {
@@ -12,7 +12,7 @@ export const ConversationList = () => {
     (state) => state.setMessageDisplay
   );
 
-  const setConversationId = useCoversationIdStore(
+  const setConversationId = useConversationIdStore(
     (state) => state.setConversationId
   );
 
@@ -43,7 +43,20 @@ export const ConversationList = () => {
   }, []);
 
   const showMessage = (conversationId: string) => {
-    setConversationId(conversationId);
+    setMessageDisplay(false);
+    const conversation = conversationList.find(
+      (conv) => conv.id === conversationId
+    );
+
+    const conversationName = conversation?.isGroup
+      ? conversation.name
+      : conversation?.participants.find((p) => p.user.id !== userInfo.id)?.user
+          .name;
+
+    setConversationId({
+      conversationId,
+      conversationName: conversationName ?? "Unknown",
+    });
     setMessageDisplay(true);
   };
 

@@ -1,17 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useMessageDisplayStore } from "../store/messageDisplayStore";
-import {
-  useMessageListStore,
-} from "../store/messageListStore";
+import { useMessageListStore } from "../store/messageListStore";
 import type { MessageFromApi } from "../types/types";
-import { useCoversationIdStore } from "../store/conversationIdStore";
+import { useConversationIdStore } from "../store/conversationIdStore";
 import { useUserInfoStore } from "../store/userInfoStore";
 import axios from "../lib/axios";
 
 export const Messages = () => {
-  const conversationId = useCoversationIdStore((state) => state.conversationId)
+  const conversationId = useConversationIdStore(
+    (state) => state.conversationId
+  );
 
-  const userInfo = useUserInfoStore((state) => state.userInfo)
+  const userInfo = useUserInfoStore((state) => state.userInfo);
 
   const messagesendRef = useRef<HTMLDivElement | null>(null);
   const setMessageDisplay = useMessageDisplayStore(
@@ -25,19 +25,19 @@ export const Messages = () => {
   const getMessagesList = async () => {
     try {
       if (!conversationId) return;
-      const {data } = await axios.get<{messages: MessageFromApi[]}>(`/messages/conversation/${conversationId}`);
-      console.log("Messages: ",data.messages)
-      setMessagesList(data.messages)
-    }catch(error) {
-      console.error("Error while fetching messages: ", error)
+      setMessagesList([]);
+      const { data } = await axios.get<{ messages: MessageFromApi[] }>(
+        `/messages/conversation/${conversationId}`
+      );
+      setMessagesList(data.messages);
+    } catch (error) {
+      console.error("Error while fetching messages: ", error);
     }
-  }
+  };
 
   useEffect(() => {
-    console.log("UseEffect of Messages!")
     getMessagesList();
-    console.log(messageList)
-  }, []);
+  }, [conversationId]);
 
   useEffect(() => {
     if (messagesendRef.current) {
@@ -45,28 +45,28 @@ export const Messages = () => {
     }
   }, [messageList]);
 
-  const sendMessage = async() => {
+  const sendMessage = async () => {
     if (!newMessage.trim()) return;
     try {
       axios.post(`/messages/conversation/${conversationId}`, {
-        content: newMessage
-      })
-      setNewMessage("")
-      console.log(messageList)
-      console.log(userInfo)
+        content: newMessage,
+      });
+      setNewMessage("");
     } catch (error) {
-      console.error("Error sending messages: ", (error))
+      console.error("Error sending messages: ", error);
     }
-
   };
 
   return (
     <div className="flex flex-col sm:h-screen bg-[#121212] text-white">
       <div className="p-3 flex justify-between sticky top-0 bg-[#121212]">
-        <div>
-          <button className="" onClick={() => setMessageDisplay(false)}>
-            <img className="w-8" src="/images/back.svg" alt="back" />
-          </button>
+        <div className="flex justify-start gap-4">
+          <div>
+            <button className="" onClick={() => setMessageDisplay(false)}>
+              <img className="w-8" src="/images/back.svg" alt="back" />
+            </button>
+          </div>
+          <div className="mt-1">Hello</div>
         </div>
         <div>
           <button>

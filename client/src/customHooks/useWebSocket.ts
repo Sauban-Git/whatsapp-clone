@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useConversationListStore } from "../store/conversationListStore";
 import { useMessageListStore } from "../store/messageListStore";
-import { useCoversationIdStore } from "../store/conversationIdStore";
+import { useConversationIdStore } from "../store/conversationIdStore";
 import { useUserInfoStore } from "../store/userInfoStore";
 import axios from "../lib/axios";
 import type { ConversationFromApi } from "../types/types";
@@ -9,7 +9,7 @@ import type { ConversationFromApi } from "../types/types";
 export const useWebSocket = () => {
   const wsRef = useRef<WebSocket | null>(null);
 
-  const conversationId = useCoversationIdStore((state) => state.conversationId);
+  const conversationId = useConversationIdStore((state) => state.conversationId);
   const setConversationList = useConversationListStore(
     (state) => state.setConversationList
   );
