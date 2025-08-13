@@ -10,7 +10,6 @@ router.get(
   "/conversation/:conversationId",
   async (req: Request, res: Response) => {
     const userId = (req as any).userId;
-    console.log("type of api userID: ", typeof userId);
     const conversationId = req.params.conversationId;
     if (!conversationId)
       return res.status(403).json({ error: "No conversation id provided" });
@@ -42,8 +41,6 @@ router.get(
           },
         },
       });
-
-      console.dir(messages, { depth: null });
 
       return res.status(200).json({
         messages,

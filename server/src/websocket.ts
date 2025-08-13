@@ -63,7 +63,6 @@ export async function setupWebSocket(server: Server) {
         const ws = clientsMap.get(clientId);
         if (ws && ws.readyState === WebSocket.OPEN) {
           if (!ws.userId) return;
-          console.log("type of ws userID: ",typeof ws.userId)
           // Fetch delivery status for this user (the recipient)
           const statuses = await prisma.messageStatus.findUnique({
             where: {
@@ -78,7 +77,6 @@ export async function setupWebSocket(server: Server) {
             },
           });
 
-          console.log("ws statuses: ", [statuses])
 
 
           // Build enriched payload
