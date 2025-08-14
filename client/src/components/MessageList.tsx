@@ -2,7 +2,11 @@ import dayjs from "dayjs";
 import { useMessageListStore } from "../store/messageListStore";
 import { useUserInfoStore } from "../store/userInfoStore";
 
-export const MessageList = () => {
+export const MessageList = ({
+  lastMessageRef,
+}: {
+  lastMessageRef: React.RefObject<HTMLDivElement | null>;
+}) => {
   const userInfo = useUserInfoStore((state) => state.userInfo);
   const messageList = useMessageListStore((state) => state.messageList);
 
@@ -20,10 +24,10 @@ export const MessageList = () => {
   };
 
   return (
-    <div className="flex-1 px-2 py-2 space-y-2 overflow-y-auto">
-      {messageList.map((msg) => {
+    <div className="flex-1 px-2 py-2 space-y-2">
+      {messageList.map((msg, index) => {
         const isSender = msg.sender.id === userInfo.id;
-
+        const isLast = index === messageList.length - 1;
         const status = msg.statuses?.[0]?.status;
         const statusIcon = getStatusIcon(status);
 
@@ -31,6 +35,7 @@ export const MessageList = () => {
         return (
           <div
             key={msg.id}
+            ref={isLast ? lastMessageRef : undefined}
             className={`flex ${isSender ? "justify-end" : "justify-start"}`}
           >
             <div

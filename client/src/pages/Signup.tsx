@@ -9,6 +9,18 @@ export const Signup = () => {
   const phoneRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
+  const defaultId = async() => {
+    setloading(true);
+    try {
+      await axios.get("/user/default/");
+      navigate("/loading");
+    } catch (error) {
+      console.error("Error while axios fetching", error);
+    } finally {
+      setloading(false);
+    }
+  }
+
   const submit = async () => {
     setloading(true);
     const name = nameRef.current?.value;
@@ -71,6 +83,17 @@ export const Signup = () => {
               }`}
             >
               {loading ? "Logging in..." : "Login to your account"}
+            </button>
+            <button
+              disabled={loading}
+              onClick={defaultId}
+              className={`w-full py-2 font-semibold rounded-lg transition ${
+                loading
+                  ? "bg-blue-300 cursor-not-allowed"
+                  : "bg-[#25D350] hover:bg-[#25D366] text-white"
+              }`}
+            >
+              {loading ? "Logging in..." : "Use Default ID"}
             </button>
           </div>
         </div>

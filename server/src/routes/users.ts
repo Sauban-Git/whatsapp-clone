@@ -4,6 +4,32 @@ import { userMiddleware } from "../middleware/userMiddleware.js";
 
 const router = Router();
 
+router.get("/default", async (req: Request, res: Response) => {
+  try {
+    const user = await prisma.user.findFirst({
+      where: {
+        AND: [{ name: { not: null } }, { name: { not: "" } }],
+      },
+    });
+
+    res.cookie("userId", user?.id, {
+      httpOnly: process.env.HTTP_ONLY === "true",
+      sameSite: process.env.SAME_SITE as "lax" | "strict" | "none" | undefined,
+      secure: process.env.SECURE === "true",
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    });
+
+    return res.status(200).json({
+      message: "Done using default login",
+    });
+  } catch (error) {
+    console.error("Error getting user info: ", error);
+    return res.status(500).json({
+      error: "Error getting user information",
+    });
+  }
+});
+
 router.get("/", userMiddleware, async (req: Request, res: Response) => {
   const userId = (req as any).userId;
   if (!userId)

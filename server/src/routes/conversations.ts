@@ -49,7 +49,7 @@ router.get("/", async (req: Request, res: Response) => {
               select: {
                 id: true,
                 name: true,
-                phoneNumber: true
+                phoneNumber: true,
               },
             },
           },
@@ -108,16 +108,25 @@ router.post("/", async (req: Request, res: Response) => {
       });
     }
 
-    // 3. Otherwise, create new conversation
+    const toUser = await prisma.user.findUnique({
+      where: { id: to },
+      select: { name: true },
+    });
+
     const newConversation = await prisma.conversation.create({
       data: {
         isGroup: false,
+        name: toUser?.name || null, // 🆕 Set name as other participant’s name
         participants: {
           create: [{ userId: to }, { userId }],
         },
       },
       include: {
-        participants: true,
+        participants: {
+          include: {
+            user: true,
+          },
+        },
       },
     });
 

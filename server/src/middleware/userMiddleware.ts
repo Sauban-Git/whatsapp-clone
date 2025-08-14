@@ -6,17 +6,20 @@ export const userMiddleware = async (
   res: Response,
   next: NextFunction
 ) => {
-  let userId = req.cookies?.userId;
+  const userId = req.cookies?.userId;
+  if (!userId) return res.status(400).json({
+    error: "Please provide userId"
+  })
 
-  const user = await prisma.user.findFirst({
-    where: {
-      AND: [{ name: { not: null } }, { name: { not: "" } }],
-    },
-  });
+  // const user = await prisma.user.findFirst({
+  //   where: {
+  //     AND: [{ name: { not: null } }, { name: { not: "" } }],
+  //   },
+  // });
 
-  if (!userId) {
-    userId = user?.id;
-  }
+  // if (!userId) {
+  //   userId = user?.id;
+  // }
   try {
     const user = await prisma.user.findUnique({
       where: {

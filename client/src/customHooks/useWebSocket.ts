@@ -1,18 +1,16 @@
+// src/hooks/useWebSocket.ts
 import { useEffect, useRef } from "react";
 import { useConversationListStore } from "../store/conversationListStore";
 import { useMessageListStore } from "../store/messageListStore";
 import { useConversationIdStore } from "../store/conversationIdStore";
 import { useUserInfoStore } from "../store/userInfoStore";
-import axios from "../lib/axios";
-import type { ConversationFromApi } from "../types/types";
+import type { ConversationFromApi, MessageFromApi } from "../types/types";
 
 export const useWebSocket = () => {
   const wsRef = useRef<WebSocket | null>(null);
 
   const conversationId = useConversationIdStore((state) => state.conversationId);
-  const setConversationList = useConversationListStore(
-    (state) => state.setConversationList
-  );
+  const setConversationList = useConversationListStore((state) => state.setConversationList);
   const setMessageList = useMessageListStore((state) => state.setMessageList);
   const userId = useUserInfoStore((state) => state.userInfo?.id);
 
@@ -20,13 +18,12 @@ export const useWebSocket = () => {
     if (!userId) return;
 
     const ws = new WebSocket(`${import.meta.env.VITE_WS_URL}`);
-
     wsRef.current = ws;
 
     ws.onopen = () => {
       console.log("WebSocket connected");
 
-      // Subscribe to user’s conversation list
+      // Subscribe to conversation list updates
       ws.send(
         JSON.stringify({
           type: "subscribe",
@@ -34,7 +31,7 @@ export const useWebSocket = () => {
         })
       );
 
-      // Subscribe to currently open conversation
+      // Subscribe to current conversation if open
       if (conversationId) {
         ws.send(
           JSON.stringify({
@@ -45,33 +42,40 @@ export const useWebSocket = () => {
       }
     };
 
-    ws.onmessage = async (event) => {
+    ws.onmessage = (event) => {
       const message = JSON.parse(event.data);
 
       if (message.type === "new_conversation_activity") {
-        console.log("Conversation list update");
-        const { data } = await axios.get<{
-          conversations: ConversationFromApi[];
-        }>("/conversations");
-        setConversationList(data.conversations);
+        console.log("Updating conversation list (WebSocket)");
+        const updatedConv: ConversationFromApi = message.data;
+
+        console.log("Updated convresponse: ",JSON.stringify(updatedConv, null, 2));
+
+        // Update list quickly without refetch
+        setConversationList((prev) => {
+          const existingIndex = prev.findIndex((c) => c.id === updatedConv.id);
+          if (existingIndex !== -1) {
+            const updatedList = [...prev];
+            updatedList[existingIndex] = { ...updatedList[existingIndex], ...updatedConv };
+            return updatedList;
+          }
+          return [updatedConv, ...prev];
+        });
       }
 
       if (message.type === "new_message") {
-        const newMessage = message.data;
+        const newMessage: MessageFromApi & { conversationId: string } = message.data;
 
         // Always update conversation list with the latest message
-        setConversationList((prevList) =>
-          prevList.map((conv) =>
+        setConversationList((prev) =>
+          prev.map((conv) =>
             conv.id === newMessage.conversationId
-              ? {
-                  ...conv,
-                  Message: [newMessage], 
-                }
+              ? { ...conv, Message: [newMessage] }
               : conv
           )
         );
 
-        // Additionally update message list if this is the currently viewed conversation
+        // Additionally update message list if viewing this conversation
         if (newMessage.conversationId === conversationId) {
           setMessageList((prev) => [...prev, newMessage]);
         }
@@ -85,5 +89,5 @@ export const useWebSocket = () => {
     return () => {
       ws.close();
     };
-  }, [conversationId, userId]);
+  }, [conversationId, userId, setConversationList, setMessageList]);
 };

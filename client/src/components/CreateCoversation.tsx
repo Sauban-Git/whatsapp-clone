@@ -3,8 +3,6 @@ import axios from "../lib/axios";
 import { useSearchDisplayStore } from "../store/searchDisplayStore";
 import { useMessageDisplayStore } from "../store/messageDisplayStore";
 import { useConversationIdStore } from "../store/conversationIdStore";
-import { useConversationListStore } from "../store/conversationListStore";
-import { useUserInfoStore } from "../store/userInfoStore";
 import type { ConversationFromApi } from "../types/types";
 
 type User = {
@@ -21,14 +19,8 @@ export const CreateConversation = () => {
     (state) => state.setMessageDisplay
   );
 
-  const userInfo = useUserInfoStore((state) => state.userInfo);
-
   const setConversationId = useConversationIdStore(
     (state) => state.setConversationId
-  );
-
-  const conversationList = useConversationListStore(
-    (state) => state.conversationList
   );
 
   const setSearchDisplayState = useSearchDisplayStore(
@@ -56,25 +48,7 @@ export const CreateConversation = () => {
 
   const showMessage = (conversationId: string) => {
     setMessageDisplay(false);
-    const conversation = conversationList.find(
-      (conv) => conv.id === conversationId
-    );
-
-    const conversationName = conversation?.isGroup
-      ? conversation.name
-      : conversation?.participants.find((p) => p.user.id !== userInfo.id)?.user
-          .name;
-
-    const conversationPhone = conversation?.isGroup
-      ? conversation.name
-      : conversation?.participants.find((p) => p.user.id !== userInfo.id)?.user
-          .phoneNumber;
-
-    setConversationId({
-      conversationId,
-      conversationName: conversationName ?? "Unknown",
-      conversationPhone: conversationPhone ?? "Missing Number"
-    });
+    setConversationId(conversationId);
     setMessageDisplay(true);
   };
 

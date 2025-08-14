@@ -1,9 +1,9 @@
 import { WebSocket, WebSocketServer } from "ws";
 import { parse as parseCookie } from "cookie";
 import type { Server } from "http";
-import { MongoClient, ObjectId } from "mongodb";
+import { MongoClient } from "mongodb";
 import { v4 as uuidv4 } from "uuid";
-import dotenv from "dotenv"
+import dotenv from "dotenv";
 import {
   addConversationSubscriber,
   addUserSubscriber,
@@ -14,7 +14,7 @@ import {
 } from "./db/redis.js";
 import { prisma } from "./db/db.js";
 
-dotenv.config()
+dotenv.config();
 
 type ExtendedWebSocket = WebSocket & { userId?: string; clientId?: string };
 
@@ -38,112 +38,122 @@ export async function setupWebSocket(server: Server) {
 
   const db = mongoClient.db("whatsapp");
   const messagesCollection = db.collection("Message");
+  const conversationsCollection = db.collection("Conversation");
 
-  const changeStream = messagesCollection.watch([], {
+  /**
+   * WATCH: New Messages
+   */
+  const messageStream = messagesCollection.watch([], {
     fullDocument: "updateLookup",
   });
 
-  changeStream.on("change", async (change) => {
-    if (change.operationType === "insert") {
-      const newMessage = change.fullDocument;
-      const conversationId = newMessage.conversationId;
-      const senderId = newMessage.senderId;
+  messageStream.on("change", async (change) => {
+    if (change.operationType !== "insert") return;
 
-      // Fetch sender info from Prisma
+    const newMessage = change.fullDocument;
+    const conversationId = newMessage.conversationId;
+    const senderId = newMessage.senderId;
 
-      const sender = await prisma.user.findUnique({
-        where: { id: newMessage.senderId },
-        select: { id: true, name: true },
-      });
+    const sender = await prisma.user.findUnique({
+      where: { id: senderId },
+      select: { id: true, name: true },
+    });
 
-      newMessage.id = newMessage._id.toString();
-      // Attach structured sender object
-      newMessage.sender = sender;
+    // Attach IDs and sender
+    newMessage.id = newMessage._id.toString();
+    newMessage.sender = sender;
 
-      // Notify conversation subscribers
-      const convClientIds = await getConversationSubscribers(conversationId);
-      for (const clientId of convClientIds) {
-        const ws = clientsMap.get(clientId);
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          if (!ws.userId) return;
-          // Fetch delivery status for this user (the recipient)
-          const statuses = await prisma.messageStatus.findUnique({
-            where: {
-              messageId_userId: {
-                messageId: newMessage._id.toString(),
-                userId: ws.userId!,
-              },
+    // Notify conversation subscribers
+    const convClientIds = await getConversationSubscribers(conversationId);
+    for (const clientId of convClientIds) {
+      const ws = clientsMap.get(clientId);
+      if (ws && ws.readyState === WebSocket.OPEN && ws.userId) {
+        const statuses = await prisma.messageStatus.findUnique({
+          where: {
+            messageId_userId: {
+              messageId: newMessage._id.toString(),
+              userId: ws.userId!,
             },
-            select: {
-              status: true,
-              updatedAt: true,
-            },
-          });
+          },
+          select: { status: true, updatedAt: true },
+        });
 
+        const messagePayload = {
+          id: newMessage._id.toString(),
+          content: newMessage.content,
+          createdAt: newMessage.createdAt,
+          updatedAt: newMessage.updatedAt,
+          type: newMessage.type,
+          conversationId: newMessage.conversationId,
+          sender: {
+            id: sender?.id,
+            name: sender?.name,
+          },
+          statuses: [statuses],
+        };
 
-
-          // Build enriched payload
-          const messagePayload = {
-            id: newMessage._id.toString(),
-            content: newMessage.content,
-            createdAt: newMessage.createdAt,
-            updatedAt: newMessage.updatedAt,
-            type: newMessage.type,
-            conversationId: newMessage.conversationId,
-            sender: {
-              id: sender?.id,
-              name: sender?.name,
-            },
-            statuses: [statuses], // Now includes the delivery status for this user
-          };
-
-
-          // Send enriched message
-          ws.send(
-            JSON.stringify({
-              type: "new_message",
-              data: messagePayload,
-            })
-          );
-        }
+        ws.send(JSON.stringify({ type: "new_message", data: messagePayload }));
       }
+    }
 
-      // Notify sender's conversation list subscribers
-      // Notify sender's conversation list subscribers
-      const conversation = await prisma.conversation.findUnique({
-        where: { id: conversationId },
-        select: {
-          id: true,
-          name: true,
-          isGroup: true,
-          createdAt: true,
-          updatedAt: true,
-          participants: {
-            select: {
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                  phoneNumber: true,
-                },
+    // Notify sender's conversation list subscribers
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      select: {
+        id: true,
+        name: true,
+        isGroup: true,
+        createdAt: true,
+        updatedAt: true,
+        participants: {
+          select: {
+            user: { select: { id: true, name: true, phoneNumber: true } },
+          },
+        },
+      },
+    });
+
+    // Fetch full conversation in API format
+    const fullConversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      select: {
+        id: true,
+        name: true,
+        isGroup: true,
+        createdAt: true,
+        updatedAt: true,
+        Message: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: {
+            id: true,
+            content: true,
+            createdAt: true,
+            type: true,
+            senderId: true,
+            sender: {
+              select: {
+                id: true,
+                name: true,
               },
             },
           },
         },
-      });
-
-      const activityPayload = {
-        ...newMessage,
-        conversation: {
-          id: conversation?.id,
-          name: conversation?.name,
-          isGroup: conversation?.isGroup,
-          createdAt: conversation?.createdAt,
-          updatedAt: conversation?.updatedAt,
-          participants: conversation?.participants,
+        participants: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                phoneNumber: true,
+              },
+            },
+          },
         },
-      };
+      },
+    });
 
+    if (fullConversation) {
       const userClientIds = await getUserSubscribers(senderId);
       for (const clientId of userClientIds) {
         const ws = clientsMap.get(clientId);
@@ -151,7 +161,7 @@ export async function setupWebSocket(server: Server) {
           ws.send(
             JSON.stringify({
               type: "new_conversation_activity",
-              data: activityPayload,
+              data: fullConversation,
             })
           );
         }
@@ -159,6 +169,108 @@ export async function setupWebSocket(server: Server) {
     }
   });
 
+  /**
+   * WATCH: New Conversations
+   */
+  const conversationStream = conversationsCollection.watch([], {
+    fullDocument: "updateLookup",
+  });
+
+  conversationStream.on("change", async (change) => {
+    if (change.operationType !== "insert") return;
+
+    const newConversation = change.fullDocument;
+    const conversationId = newConversation._id.toString();
+
+    // Get participants from Prisma
+    const participants = await prisma.participant.findMany({
+      where: { conversationId },
+      select: {
+        user: { select: { id: true, name: true, phoneNumber: true } },
+      },
+    });
+
+    // Notify each participant's connected clients
+    for (const { user } of participants) {
+      const clientIds = await getUserSubscribers(user.id);
+      for (const clientId of clientIds) {
+        const ws = clientsMap.get(clientId);
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          // Fetch full conversation in API format
+          const fullConversation = await prisma.conversation.findUnique({
+            where: { id: conversationId },
+            select: {
+              id: true,
+              name: true,
+              isGroup: true,
+              createdAt: true,
+              updatedAt: true,
+              Message: {
+                orderBy: { createdAt: "desc" },
+                take: 1,
+                select: {
+                  id: true,
+                  content: true,
+                  createdAt: true,
+                  type: true,
+                  senderId: true,
+                  sender: {
+                    select: {
+                      id: true,
+                      name: true,
+                    },
+                  },
+                },
+              },
+              participants: {
+                select: {
+                  user: {
+                    select: {
+                      id: true,
+                      name: true,
+                      phoneNumber: true,
+                    },
+                  },
+                },
+              },
+            },
+          });
+
+          if (fullConversation) {
+            for (const { user } of participants) {
+              const clientIds = await getUserSubscribers(user.id);
+              for (const clientId of clientIds) {
+                const ws = clientsMap.get(clientId);
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                  ws.send(
+                    JSON.stringify({
+                      type: "new_conversation_activity",
+                      data: fullConversation,
+                    })
+                  );
+                  // Auto-subscribe them to this new conversation
+                  await addConversationSubscriber(conversationId, clientId);
+                  const subs = clientSubscriptions.get(clientId) || new Set();
+                  subs.add(conversationId);
+                  clientSubscriptions.set(clientId, subs);
+                }
+              }
+            }
+          }
+
+          // Auto-subscribe them to this new conversation
+          await addConversationSubscriber(conversationId, clientId);
+          const subs = clientSubscriptions.get(clientId) || new Set();
+          subs.add(conversationId);
+          clientSubscriptions.set(clientId, subs);
+        }
+      }
+    }
+  });
+
+  /**
+   * WebSocket connection handler
+   */
   wss.on("connection", async (ws: ExtendedWebSocket, req) => {
     try {
       const cookies = parseCookie(req.headers.cookie || "");
@@ -170,7 +282,6 @@ export async function setupWebSocket(server: Server) {
       }
 
       const user = await prisma.user.findUnique({ where: { id: userId } });
-
       if (!user) {
         ws.close(1008, "Unauthorized");
         return;
@@ -181,6 +292,7 @@ export async function setupWebSocket(server: Server) {
       ws.clientId = clientId;
       clientsMap.set(clientId, ws);
 
+      // Auto-subscribe to all existing conversations
       const participants = await prisma.participant.findMany({
         where: { userId: user.id },
         select: { conversationId: true },
@@ -194,7 +306,6 @@ export async function setupWebSocket(server: Server) {
           `User ${user.id} auto-subscribed to conversation ${conversationId}`
         );
       }
-
       clientSubscriptions.set(clientId, subscribedConversations);
 
       await addUserSubscriber(user.id, clientId);
@@ -214,7 +325,6 @@ export async function setupWebSocket(server: Server) {
                 `User ${ws.userId} subscribed to conversation ${data.conversationId}`
               );
             }
-
             if (data.list === "conversation_list") {
               await addUserSubscriber(ws.userId!, clientId);
               console.log(
@@ -242,7 +352,6 @@ export async function setupWebSocket(server: Server) {
 
         clientSubscriptions.delete(clientId);
         clientsMap.delete(clientId);
-
         console.log(`WebSocket disconnected for user ${ws.userId}`);
       });
 

@@ -3,6 +3,7 @@ import { useMessageDisplayStore } from "../store/messageDisplayStore";
 import { useMessageListStore } from "../store/messageListStore";
 import type { MessageFromApi } from "../types/types";
 import { useConversationIdStore } from "../store/conversationIdStore";
+import { useConversationListStore } from "../store/conversationListStore";
 import axios from "../lib/axios";
 import { MessageList } from "./MessageList";
 
@@ -11,20 +12,19 @@ export const Messages = () => {
     (state) => state.conversationId
   );
 
-  const conversationName = useConversationIdStore(
-    (state) => state.conversationName
-  );
-
-  const conversationNumber = useConversationIdStore(
-    (state) => state.conversationPhone
-  );
-
-  const messagesendRef = useRef<HTMLDivElement | null>(null);
   const setMessageDisplay = useMessageDisplayStore(
     (state) => state.setMessageDisplay
   );
   const setMessagesList = useMessageListStore((state) => state.setMessageList);
   const messageList = useMessageListStore((state) => state.messageList);
+
+  const conversationList = useConversationListStore(
+    (state) => state.conversationList
+  );
+
+  const [headerName, setHeaderName] = useState("");
+  const [headerNumber, setHeaderNumber] = useState("");
+  const lastMessageRef = useRef<HTMLDivElement>(null);
 
   const [newMessage, setNewMessage] = useState("");
 
@@ -46,10 +46,23 @@ export const Messages = () => {
   }, [conversationId]);
 
   useEffect(() => {
-    if (messagesendRef.current) {
-      messagesendRef.current.scrollIntoView({ behavior: "smooth" });
+    if (lastMessageRef.current) {
+      lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messageList]);
+
+  // Update header from conversation list when id changes
+  useEffect(() => {
+    if (!conversationId) return;
+    const conv = conversationList.find((c) => c.id === conversationId);
+    if (conv) {
+      setHeaderName(conv.name || "");
+      setHeaderNumber(conv.participants[0]?.user.phoneNumber || "");
+    } else {
+      setHeaderName("");
+      setHeaderNumber("");
+    }
+  }, [conversationId, conversationList]);
 
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
@@ -70,13 +83,14 @@ export const Messages = () => {
         <button onClick={() => setMessageDisplay(false)}>
           <img className="w-8" src="/images/back.svg" alt="back" />
         </button>
-        <div className="text-white">{conversationName}: {conversationNumber}</div>
+        <div className="text-white">
+          {headerName} {headerNumber && `: ${headerNumber}`}
+        </div>
       </div>
 
       {/* Scrollable Message List */}
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-2">
-        <MessageList />
-        <div ref={messagesendRef} />
+        <MessageList lastMessageRef={lastMessageRef} />
       </div>
 
       {/* Bottom Input Bar */}
@@ -87,7 +101,7 @@ export const Messages = () => {
             value={newMessage}
             onFocus={() => {
               setTimeout(() => {
-                messagesendRef.current?.scrollIntoView({ behavior: "smooth" });
+                lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
               }, 100);
             }}
             onChange={(e) => setNewMessage(e.target.value)}
