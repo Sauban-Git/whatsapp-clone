@@ -5,31 +5,20 @@ import { Messages } from "../components/Messages";
 import { Placeholder } from "../components/Placeholder";
 import { useMessageDisplayStore } from "../store/messageDisplayStore";
 import { useUserInfoStore } from "../store/userInfoStore";
-import type { UserInfoApi } from "../types/types";
 import { useEffect } from "react";
-import axios from "../lib/axios";
 
 export const Home = () => {
   const navigate = useNavigate();
-  const setUserInfo = useUserInfoStore((state) => state.setUserInfo);
-
-  const checkUser = async () => {
-    try {
-      const { data } = await axios.get<{ user: UserInfoApi }>("/user/");
-      setUserInfo(data.user);
-    } catch (error) {
-      console.error("Looks like user isnt logged in: ", error);
-      navigate("/loading");
-    }
-  };
+  const userInfo = useUserInfoStore((state) => state.userInfo);
+  const messageDisplay = useMessageDisplayStore((state) => state.messageDisplay);
 
   useEffect(() => {
-    checkUser();
-  }, []);
+    if (!userInfo.id) {
+      navigate("/loading");
+    }
+  }, [userInfo.id, navigate]);
 
-  const messageDisplay = useMessageDisplayStore(
-    (state) => state.messageDisplay
-  );
+  if (!userInfo.id) return null;
 
   return (
     <div className="md:grid md:grid-cols-18 bg-stone-900 text-white">
