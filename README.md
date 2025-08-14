@@ -190,3 +190,90 @@ POST /messages        – Send message
 ## 📄 License
 
 MIT License
+
+
+---
+
+## 📦 Webhook Payload Zip Format
+
+When calling:
+
+```
+POST /webhook
+```
+
+The request body should be a **`multipart/form-data`** upload containing a `.zip` file.  
+Inside the `.zip`, the folder and file structure should look like this:
+
+```
+payload/
+├── conversation_1_message_1.json
+├── conversation_1_message_2.json
+├── conversation_1_status_1.json
+├── conversation_1_status_2.json
+├── conversation_2_message_1.json
+├── conversation_2_message_2.json
+├── conversation_2_status_1.json
+└── conversation_2_status_2.json
+```
+
+### File Naming Rules
+- `conversation_<number>_message_<number>.json` → Contains message event payloads.  
+- `conversation_<number>_status_<number>.json` → Contains message status update payloads.  
+- Each `conversation_X` group represents one unique conversation.
+- The `<number>` suffix increments for each message or status in that conversation.
+
+### File Content Example
+Example `conversation_1_message_1.json`:
+```json
+{
+  "payload_type": "whatsapp_webhook",
+  "_id": "conv1-msg1-user",
+  "metaData": {
+    "entry": [
+      {
+        "changes": [
+          {
+            "field": "messages",
+            "value": {
+              "contacts": [
+                {
+                  "profile": { "name": "Ravi Kumar" },
+                  "wa_id": "919937320320"
+                }
+              ],
+              "messages": [
+                {
+                  "from": "919937320320",
+                  "id": "wamid.HBgMOTE5OTY3NTc4NzIwFQIAEhggMTIzQURFRjEyMzQ1Njc4OTA=",
+                  "timestamp": "1754400000",
+                  "text": { "body": "Hi, I’d like to know more about your services." },
+                  "type": "text"
+                }
+              ],
+              "messaging_product": "whatsapp",
+              "metadata": {
+                "display_phone_number": "918329446654",
+                "phone_number_id": "629305560276479"
+              }
+            }
+          }
+        ],
+        "id": "30164062719905277"
+      }
+    ],
+    "gs_app_id": "conv1-app",
+    "object": "whatsapp_business_account"
+  },
+  "createdAt": "2025-08-06 12:00:00",
+  "startedAt": "2025-08-06 12:00:00",
+  "completedAt": "2025-08-06 12:00:01",
+  "executed": true
+}
+```
+
+> **Tip:**  
+> - All files in the `.zip` must be valid JSON.  
+> - Ensure timestamps and IDs are unique per message.  
+> - Keep `payload_type` as `"whatsapp_webhook"` so the backend can parse it correctly.
+
