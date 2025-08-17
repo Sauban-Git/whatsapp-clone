@@ -62,13 +62,14 @@ export const ConversationList = () => {
                 {conv.isGroup
                   ? conv.name
                   : conv.participants.find((p) => p.user.id !== userInfo.id)
-                      ?.user.name ?? "Unknown"}
+                      ?.user.name ?? conv.participants[0]?.user.phoneNumber}
               </p>
               <p className="text-sm text-gray-400 truncate mt-1">
                 {Array.isArray(conv?.Message) && conv.Message.length > 0
-                  ? `${conv.Message[0]?.sender?.name ?? "Unknown"}: ${
-                      conv.Message[0]?.content ?? ""
-                    }`
+                  ? `${
+                      conv.Message[0]?.sender?.name ??
+                      conv.participants[0]?.user.phoneNumber
+                    }: ${conv.Message[0]?.content ?? ""}`
                   : "No message yet"}
               </p>
             </div>

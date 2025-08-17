@@ -84,7 +84,7 @@ export const Messages = () => {
           <img className="w-8" src="/images/back.svg" alt="back" />
         </button>
         <div className="text-white">
-          {headerName} {headerNumber && `: ${headerNumber}`}
+          {!headerName ? `${headerNumber}`: `${headerName}: ${headerNumber}`}
         </div>
       </div>
 

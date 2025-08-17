@@ -61,7 +61,7 @@ router.post("/", upload.single("payload"), async (req, res) => {
           const [user1, user2] = [senderPhone, receiverPhone].sort(
             (a, b) => a - b
           );
-          const convKey = `conversation_${user1}_${user2}`;
+          const convKey = null;
 
           let conversation = await prisma.conversation.findFirst({
             where: {
