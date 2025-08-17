@@ -79,7 +79,7 @@ export const Messages = () => {
   return (
     <div className="h-screen bg-gray-900 flex flex-col">
       {/* Top Bar */}
-      <div className="sticky top-0 z-10 bg-gray-900 border-b border-gray-700 p-3 flex items-center gap-4">
+      <div className="sticky top-0 z-10 bg-gray-900 border-b border-gray-700 p-3 flex justify-between items-center gap-4">
         <button onClick={() => setMessageDisplay(false)}>
           <img className="w-8" src="/images/back.svg" alt="back" />
         </button>
