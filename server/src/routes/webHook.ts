@@ -134,11 +134,9 @@ router.post(
             },
           });
         }
-        // If not a status file
+        // If status file
         else {
-          const statusToSet = payload.completedAt
-            ? DeliveryStatus.READ
-            : DeliveryStatus.DELIVERED;
+          const statusToSet = payload.metaData.entry[0].changes[0].value.statuses[0].status.toUpperCase();
           const messageId =
             payload.metaData.entry[0].changes[0].value.statuses[0].id;
 
