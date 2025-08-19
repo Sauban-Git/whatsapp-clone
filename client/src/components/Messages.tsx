@@ -6,6 +6,7 @@ import { useConversationIdStore } from "../store/conversationIdStore";
 import { useConversationListStore } from "../store/conversationListStore";
 import axios from "../lib/axios";
 import { MessageList } from "./MessageList";
+import { useUserInfoStore } from "../store/userInfoStore";
 
 export const Messages = () => {
   const conversationId = useConversationIdStore(
@@ -21,6 +22,8 @@ export const Messages = () => {
   const conversationList = useConversationListStore(
     (state) => state.conversationList
   );
+
+  const userInfo = useUserInfoStore((store) => store.userInfo)
 
   const [headerName, setHeaderName] = useState("");
   const [headerNumber, setHeaderNumber] = useState("");
@@ -56,7 +59,8 @@ export const Messages = () => {
     if (!conversationId) return;
     const conv = conversationList.find((c) => c.id === conversationId);
     if (conv) {
-      setHeaderName(conv.name || "");
+      setHeaderName(conv.name ? conv.name : conv.participants.find((p) => p.user.id !== userInfo.id)
+                      ?.user.name ?? conv.participants[0]?.user.phoneNumber);
       setHeaderNumber(conv.participants[0]?.user.phoneNumber || "");
     } else {
       setHeaderName("");

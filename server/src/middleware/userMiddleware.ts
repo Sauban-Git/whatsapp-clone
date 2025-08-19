@@ -33,7 +33,7 @@ export const userMiddleware = async (
       httpOnly: process.env.HTTP_ONLY === "true",
       sameSite: process.env.SAME_SITE as "lax" | "strict" | "none" | undefined,
       secure: process.env.SECURE === "true",
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      maxAge: 1000 * 60 * 60 * 24 * 1, // 7 days
     });
 
     (req as any).userId = userId;

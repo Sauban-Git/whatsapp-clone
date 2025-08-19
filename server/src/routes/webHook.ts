@@ -1,67 +1,60 @@
-import express from "express";
+import express, { type Request, type Response } from "express";
 import multer from "multer";
-import AdmZip from "adm-zip";
-import fs from "fs/promises";
 import { prisma } from "../db/db.js";
-import {
-  DeliveryStatus,
-  type MessageType,
-} from "../../generated/prisma/index.js";
+import unzipper from "unzipper";
+import { DeliveryStatus } from "../../generated/prisma/index.js";
+import fs from "fs/promises";
+import path from "path";
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
-router.post("/", upload.single("payload"), async (req, res) => {
-  console.log("hitted webhook");
-  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+router.post(
+  "/",
+  upload.single("payload"),
+  async (req: Request, res: Response) => {
+    console.log("hitted webhook");
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
-  try {
-    const zip = new AdmZip(req.file.path);
-    const zipEntries = zip.getEntries();
+    const directory = await unzipper.Open.file(req.file.path);
 
-    for (const entry of zipEntries) {
-      if (!entry.entryName.endsWith(".json")) continue;
+    for (const file of directory.files) {
+      if (!file.path.endsWith(".json")) continue;
 
-      const fileContent = zip.readAsText(entry);
-      const data = JSON.parse(fileContent);
+      const content = await file.buffer();
 
-      const entries = data.metaData?.entry || [];
-      for (const entryItem of entries) {
-        const changes = entryItem.changes || [];
-        for (const change of changes) {
-          const value = change.value;
-          const contacts = value.contacts || [];
-          const metadata = value.metadata || {};
+      try {
+        const payload = JSON.parse(content.toString("utf-8"));
 
-          if (!contacts.length || !metadata.display_phone_number) continue;
+        // If it is not a status file
+        if (!payload.metaData.entry[0].changes[0].value.statuses) {
+          const userA = {
+            phoneNumber: parseInt(
+              payload.metaData.entry[0].changes[0].value.metadata
+                .display_phone_number
+            ),
+          };
+          const userB = {
+            name: payload.metaData.entry[0].changes[0].value.contacts[0].profile
+              .name,
+            phoneNumber: parseInt(
+              payload.metaData.entry[0].changes[0].value.contacts[0].wa_id
+            ),
+          };
 
-          const contact = contacts[0];
-          const waId = contact.wa_id;
-          const name = contact.profile?.name || null;
-          const displayPhoneNumber = metadata.display_phone_number;
-
-          const senderPhone = parseInt(waId); // User A
-          const receiverPhone = parseInt(displayPhoneNumber); // User B
-
-          // Upsert sender (User A)
-          const sender = await prisma.user.upsert({
-            where: { phoneNumber: senderPhone },
-            update: { name },
-            create: { phoneNumber: senderPhone, name },
+          // Upsert importer (User A)
+          const importer = await prisma.user.upsert({
+            where: { phoneNumber: userA.phoneNumber },
+            update: {},
+            create: { phoneNumber: userA.phoneNumber },
           });
 
           // Upsert receiver (User B)
-          const receiver = await prisma.user.upsert({
-            where: { phoneNumber: receiverPhone },
+          const otherUser = await prisma.user.upsert({
+            where: { phoneNumber: userB.phoneNumber },
             update: {},
-            create: { phoneNumber: receiverPhone, name: null },
+            create: { phoneNumber: userB.phoneNumber, name: userB.name },
           });
-
-          // Create conversation ID key
-          const [user1, user2] = [senderPhone, receiverPhone].sort(
-            (a, b) => a - b
-          );
-          const convKey = null;
 
           let conversation = await prisma.conversation.findFirst({
             where: {
@@ -69,7 +62,7 @@ router.post("/", upload.single("payload"), async (req, res) => {
               participants: {
                 every: {
                   userId: {
-                    in: [sender.id, receiver.id],
+                    in: [importer.id, otherUser.id],
                   },
                 },
                 // Also make sure it ONLY has these two participants
@@ -84,94 +77,109 @@ router.post("/", upload.single("payload"), async (req, res) => {
           if (!conversation) {
             conversation = await prisma.conversation.create({
               data: {
-                name: convKey,
                 isGroup: false,
                 participants: {
-                  create: [{ userId: sender.id }, { userId: receiver.id }],
+                  create: [{ userId: importer.id }, { userId: otherUser.id }],
                 },
               },
               include: { participants: true },
             });
           }
 
-          const isMessageFile = entry.entryName
-            .toLowerCase()
-            .includes("message");
-          const isStatusFile = entry.entryName.toLowerCase().includes("status");
+          const message = {
+            senderId:
+              parseInt(
+                payload.metaData.entry[0].changes[0].value.messages[0].from
+              ) === importer.phoneNumber
+                ? importer.id
+                : otherUser.id,
+            id: payload.metaData.entry[0].changes[0].value.messages[0].id,
+            type: payload.metaData.entry[0].changes[0].value.messages[0].type.toUpperCase(),
+            content:
+              payload.metaData.entry[0].changes[0].value.messages[0].text.body,
+            sender:
+              parseInt(
+                payload.metaData.entry[0].changes[0].value.messages[0].from
+              ) === userA.phoneNumber
+                ? userA.phoneNumber
+                : userB.name,
+          };
 
-          const messages = value.messages || [];
+          const msg = await prisma.message.upsert({
+            where: {
+              externalId: message.id,
+            },
+            update: {},
+            create: {
+              externalId: message.id,
+              content: message.content,
+              type: message.type,
+              senderId: message.senderId,
+              conversationId: conversation.id,
+            },
+          });
 
-          for (const msg of messages) {
-            if (isMessageFile) {
-              const messageType = msg.type.toUpperCase() as MessageType;
-              const content = msg.text?.body || "";
-
-              // Save message
-              const message = await prisma.message.upsert({
-                where: { externalId: msg.id },
-                update: {},
-                create: {
-                  externalId: msg.id,
-                  content,
-                  type: messageType,
-                  senderId: sender.id,
-                  conversationId: conversation.id,
-                },
-              });
-
-              // Set initial status SENT
-              await prisma.messageStatus.upsert({
-                where: {
-                  messageId_userId: {
-                    messageId: message.id,
-                    userId: sender.id,
-                  },
-                },
-                update: { status: DeliveryStatus.SENT },
-                create: {
-                  messageId: message.id,
-                  userId: sender.id,
-                  status: DeliveryStatus.SENT,
-                },
-              });
-            }
-
-            if (isStatusFile) {
-              const statusToSet: DeliveryStatus = data.completedAt
-                ? DeliveryStatus.READ
-                : DeliveryStatus.DELIVERED;
-
-              const message = await prisma.message.findFirst({
-                where: { externalId: msg.id }, // msg.id is the WhatsApp ID
-              });
-
-              await prisma.messageStatus.upsert({
-                where: {
-                  messageId_userId: {
-                    messageId: message?.id ?? "",
-                    userId: sender.id,
-                  },
-                },
-                update: { status: statusToSet },
-                create: {
-                  messageId: msg.id,
-                  userId: sender.id,
-                  status: statusToSet,
-                },
-              });
-            }
-          }
+          await prisma.messageStatus.upsert({
+            where: {
+              messageId_userId: {
+                messageId: msg.id,
+                userId: message.senderId,
+              },
+            },
+            update: { status: DeliveryStatus.SENT },
+            create: {
+              messageId: msg.id,
+              userId: message.senderId,
+              status: DeliveryStatus.SENT,
+            },
+          });
         }
+        // If not a status file
+        else {
+          const statusToSet = payload.completedAt
+            ? DeliveryStatus.READ
+            : DeliveryStatus.DELIVERED;
+          const messageId =
+            payload.metaData.entry[0].changes[0].value.statuses[0].id;
+
+          const message = await prisma.message.findFirst({
+            where: { externalId: messageId },
+          });
+
+          await prisma.messageStatus.upsert({
+            where: {
+              messageId_userId: {
+                messageId: message!.id,
+                userId: message!.senderId,
+              },
+            },
+            update: { status: statusToSet },
+            create: {
+              messageId: message!.id,
+              userId: message!.senderId,
+              status: statusToSet,
+            },
+          });
+        }
+      } catch (error) {
+        console.error("Error parsing: ", error);
+        return res.status(500).json({
+          error: "Something went wrong",
+        });
       }
     }
+    // Delete uploaded zip file
+    try {
+      await fs.unlink(path.resolve(req.file.path));
+      console.log("Uploaded file deleted");
+    } catch (err) {
+      console.error("Failed to delete uploaded file:", err);
+    }
 
-    await fs.unlink(req.file.path);
-    res.json({ success: true });
-  } catch (err) {
-    console.error(err);
-    if (req.file) await fs.unlink(req.file.path);
-    res.status(500).json({ error: "Webhook processing failed." });
+    return res.status(200).json({
+      message: "Done! importing payload",
+    });
   }
-});
+);
 
 export { router as webhookRouter };

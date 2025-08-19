@@ -6,17 +6,17 @@ const router = Router();
 
 router.get("/default", async (req: Request, res: Response) => {
   try {
-    const user = await prisma.user.findFirst({
+    const user = await prisma.user.findUnique({
       where: {
-        AND: [{ name: { not: null } }, { name: { not: "" } }],
-      },
-    });
+        phoneNumber: 918329446654
+      }
+    })
 
     res.cookie("userId", user?.id, {
       httpOnly: process.env.HTTP_ONLY === "true",
       sameSite: process.env.SAME_SITE as "lax" | "strict" | "none" | undefined,
       secure: process.env.SECURE === "true",
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      maxAge: 1000 * 60 * 60 * 24 * 1, // 7 days
     });
 
     return res.status(200).json({
@@ -117,7 +117,7 @@ router.post("/", async (req: Request, res: Response) => {
       httpOnly: process.env.HTTP_ONLY === "true",
       sameSite: process.env.SAME_SITE as "lax" | "strict" | "none" | undefined,
       secure: process.env.SECURE === "true",
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      maxAge: 1000 * 60 * 60 * 24 * 1, // 7 days
     });
 
     return res.status(200).json({
